@@ -1,0 +1,75 @@
+Bucket product-images creado/verificado.
+Nota: exec_sql no disponible. Crea la tabla profiles manualmente en Supabase usando docs/profiles-table.sql
+Nota: Crea la tabla admin_audit_log manualmente en Supabase.
+Admin actualizado: admin@closet.local
+Closet Elander backend listo
+  Local:   http://localhost:3000
+  Red:     http://192.168.0.5:3000
+[PRODUCTS REQUEST] { query: { limit: '1' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '1' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }
+[PRODUCTS REQUEST] { query: { limit: '20' } }
+[SUPABASE RESPONSE] { dataLength: 0, error: null }

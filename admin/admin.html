@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Closet Elander</title>
+<style>
+body{margin:0;background:#050505;color:white;font-family:Arial,Helvetica,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:24px}
+h1{font-size:24px;color:#ff2020}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.panel{border:1px solid #702020;background:#111;padding:16px}
+input,textarea,select,button{box-sizing:border-box;width:100%;padding:10px;margin:6px 0;background:#050505;color:white;border:1px solid #ff2020}
+button{background:#e00000;cursor:pointer;font-weight:700}
+table{width:100%;border-collapse:collapse;margin-top:16px}
+th,td{border-bottom:1px solid #333;padding:8px;text-align:left;font-size:13px}
+.row-actions{display:flex;gap:6px}
+.row-actions button{margin:0}
+.status{min-height:20px;color:#ff8080}
+a{color:#ff8080}
+</style>
+</head>
+<body>
+<main class="wrap">
+    <h1>Admin Closet Elander</h1>
+    <p><a href="/closet.html">Volver al arcade</a></p>
+    <section class="grid">
+        <div class="panel">
+            <h2>Login admin</h2>
+            <input id="email" type="email" placeholder="Email">
+            <input id="password" type="password" placeholder="Contrasena">
+            <button id="loginBtn">Entrar</button>
+            <div class="status" id="loginStatus"></div>
+        </div>
+        <div class="panel">
+            <h2>Estadisticas</h2>
+            <p>Usuarios: <strong id="totalUsers">0</strong></p>
+            <p>Prendas: <strong id="totalProducts">0</strong></p>
+            <button id="refreshBtn">Actualizar</button>
+        </div>
+    </section>
+    <div class="status" id="status"></div>
+    <h2>Usuarios</h2>
+    <table>
+        <thead><tr><th>Email</th><th>Username</th><th>Dealer</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody id="usersBody"></tbody>
+    </table>
+    <h2>Prendas</h2>
+    <table>
+        <thead><tr><th>Nombre</th><th>Precio</th><th>Vendedor</th><th>Acciones</th></tr></thead>
+        <tbody id="productsBody"></tbody>
+    </table>
+</main>
+<script>
+const TOKEN_KEY = "closetElanderToken";
+let users = [];
+let products = [];
+const $ = id => document.getElementById(id);
+
+function esc(str) {
+  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+async function api(path, options = {}){
+    const token = localStorage.getItem(TOKEN_KEY);
+    const res = await fetch(path, {
+      credentials: "include",
+      ...options,
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+        ...(options.body instanceof FormData ? {} : {"Content-Type": "application/json"}),
+        ...(token ? {Authorization: "Bearer "+token} : {}),
+        ...(options.headers || {})
+      }
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(data.error || "Error");
+    return data;
+}
+function money(value){return "₡"+Number(value||0).toLocaleString("es-CR")}
+function setStatus(msg){$("status").textContent=msg||""}
+async function login(){
+    try{
+        const data = await api("/api/auth/login",{method:"POST",body:JSON.stringify({email:$("email").value.trim(),password:$("password").value})});
+        if(!data.user.is_admin) throw new Error("Esta cuenta no es admin.");
+        localStorage.setItem(TOKEN_KEY,data.token);
+        $("loginStatus").textContent="Admin conectado.";
+        await load();
+    }catch(e){$("loginStatus").textContent=e.message}
+}
+async function load(){
+    try{
+        const data = await api("/api/admin/dashboard");
+        users=data.users||[]; products=data.products||[];
+        $("totalUsers").textContent=data.stats.users||0;
+        $("totalProducts").textContent=data.stats.products||0;
+        $("usersBody").innerHTML=users.map(u => "<tr><td>"+esc(u.email)+"</td><td>"+esc(u.username)+"</td><td>"+esc(u.dealer_id)+"</td><td>"+(u.banned?"Banneado":"Activo")+"</td><td class=\"row-actions\"><button data-ban=\""+esc(u.id)+"\">Bannear</button><button data-del-user=\""+esc(u.id)+"\">Eliminar</button></td></tr>").join("");
+        $("productsBody").innerHTML=products.map(p => "<tr><td>"+esc(p.name)+"</td><td>"+money(p.price)+"</td><td>"+esc(p.seller_username)+"</td><td><button data-del-product=\""+esc(p.id)+"\">Eliminar</button></td></tr>").join("");
+        setStatus("Actualizado.");
+    }catch(e){setStatus(e.message)}
+}
+$("loginBtn").onclick=login;
+$("refreshBtn").onclick=load;
+document.body.addEventListener("click", async event=>{
+    const b=event.target;
+    if(b.dataset.ban && confirm("Bannear usuario?")){await api("/api/admin/users/"+b.dataset.ban+"/ban",{method:"POST"}); await load();}
+    if(b.dataset.delUser && confirm("Eliminar usuario y prendas?")){await api("/api/admin/users/"+b.dataset.delUser,{method:"DELETE"}); await load();}
+    if(b.dataset.delProduct && confirm("Eliminar prenda?")){await api("/api/products/"+b.dataset.delProduct,{method:"DELETE"}); await load();}
+});
+load().catch(()=>{});
+</script>
+</body>
+</html>

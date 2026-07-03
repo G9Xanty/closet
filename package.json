@@ -1,0 +1,33 @@
+{
+  "name": "closet-elander-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Closet Elander — Backend + Frontend",
+  "type": "module",
+  "scripts": {
+    "start": "node server.cjs",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "build:vercel": "npm run build && cp -r admin dist/admin",
+    "preview": "vite preview",
+    "vercel-dev": "node api/index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^8.5.2",
+    "multer": "^1.4.5-lts.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.2"
+  }
+}

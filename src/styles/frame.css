@@ -1,0 +1,110 @@
+.arcade-wrapper {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  background: #000;
+  overflow: hidden;
+}
+
+.arcade-machine {
+  position: relative;
+  width: min(98vw, 1280px);
+  margin-bottom: 0;
+  aspect-ratio: 3 / 2;
+  max-height: 100vh;
+}
+
+.desktop-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.desktop-app {
+  position: absolute;
+  z-index: 1;
+  width: 55%;
+  height: 40%;
+  left: 22.5%;
+  top: 22%;
+  overflow: hidden;
+  border-radius: 18px;
+  box-sizing: border-box;
+  background: radial-gradient(ellipse at center, 
+    #0a0a0f 0%, 
+    #050508 60%, 
+    #000000 100%
+  );
+  padding: 10px 14px;
+}
+
+.viewport-safe {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 4px 0;
+  gap: 6px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.viewport-safe::-webkit-scrollbar {
+  width: 3px;
+}
+
+.viewport-safe::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+.mobile-machine {
+  margin: 0 auto;
+  width: min(95vw, 430px);
+  max-height: 100vh;
+}
+
+.mobile-app {
+  position: absolute;
+  z-index: 1;
+  width: 50%;
+  height: 52%;
+  left: 25%;
+  top: 17%;
+  overflow: hidden;
+  border-radius: 10px;
+  box-sizing: border-box;
+  background: radial-gradient(ellipse at center, 
+    #0a0a0f 0%, 
+    #050508 60%, 
+    #000000 100%
+  );
+  padding: 8px 10px;
+}
+
+.mobile-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.viewport-root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}

@@ -1,0 +1,79 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Closet Elander</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Closet Elander">
+<link rel="apple-touch-icon" href="/icons/icon-192.svg">
+<style>
+@font-face{font-family:'arcade';src:url('/assets/Press_Start_2P/PressStart2P-Regular.ttf') format('truetype');}
+:root{
+  --bg-deep:#07070a;
+  --bg-panel:#121216;
+  --bg-card:#18181e;
+  --bg-hover:#1f1f28;
+  --border-light:#2a2a34;
+  --border-mid:#383845;
+  --text-primary:#e8e8ea;
+  --text-secondary:#88889a;
+  --text-muted:#5c5c6e;
+  --accent-red:#e2412f;
+  --accent-red-dim:#8a1f14;
+  --accent-gold:#c99f4a;
+  --accent-green:#4caf50;
+  --shadow-glow:0 0 12px rgba(226,65,47,0.4);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:black}
+.frame-container{position:relative;width:100vw;height:100vh;overflow:hidden;background:black}
+/* BACKGROUND */
+.desktop-bg,.mobile-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none;user-select:none}
+/* APP SCREEN */
+.app{position:absolute;z-index:1;overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:center;color:var(--text-primary);background:var(--bg-deep)}
+/* FRAME OVERLAY */
+.frame-overlay{position:absolute;z-index:2;pointer-events:none;user-select:none}
+@media(min-width:1024px){
+  .frame-container.frame-mobile{display:none}
+  .frame-container.frame-desktop{display:block}
+  .app{width:38%;height:48%;left:31%;top:19%}
+  .frame-overlay{height:115vh;width:auto;left:50%;top:-2%;transform:translateX(-50%)}
+}
+@media(max-width:1023px){
+  .frame-container.frame-desktop{display:none}
+  .frame-container.frame-mobile{display:block}
+  .app{width:62%;height:58%;left:19%;top:16%;border-radius:18px}
+  .frame-overlay{height:95vh;width:auto;left:50%;top:50%;transform:translate(-50%,-50%)}
+}
+</style>
+</head>
+<body>
+<noscript>Necesitas JavaScript para ver Closet Elander.</noscript>
+
+<div class="frame-container frame-desktop" id="desktopContainer">
+  <img class="desktop-bg" src="/assets/vantablack computadora.png" alt="" draggable="false">
+  <div class="app" id="desktopApp"><p style="color:var(--text-secondary);font-size:0.8rem">Cargando...</p></div>
+  <img class="frame-overlay" src="/assets/arcade_computadora.png" alt="" draggable="false">
+</div>
+
+<div class="frame-container frame-mobile" id="mobileContainer">
+  <img class="mobile-bg" src="/assets/vantablack cell.png" alt="" draggable="false">
+  <div class="app" id="mobileApp"><p style="color:var(--text-secondary);font-size:0.8rem">Cargando...</p></div>
+  <img class="frame-overlay" src="/assets/ChatGPT Image 29 jun 2026, 10_48_09.png" alt="" draggable="false">
+</div>
+
+<script>
+(function(){
+  var w = window.innerWidth || document.documentElement.clientWidth;
+  var desk = document.getElementById('desktopContainer');
+  var mob = document.getElementById('mobileContainer');
+  if (w >= 1024) { mob.parentNode.removeChild(mob); }
+  else { desk.parentNode.removeChild(desk); }
+})();
+if ("serviceWorker" in navigator) { navigator.serviceWorker.register("/sw.js").catch(function(){}); }
+</script>
+</body>
+</html>

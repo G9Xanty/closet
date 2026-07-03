@@ -1,0 +1,1252 @@
+.screen {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: clamp(13px, 1vw, 16px);
+}
+
+.view,
+.feed-view,
+.app-view {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.feed-screen {
+  flex: 1;
+  min-height: 0;
+}
+
+.screen::-webkit-scrollbar,
+.view::-webkit-scrollbar,
+.feed-view::-webkit-scrollbar {
+  width: 3px;
+}
+
+.screen::-webkit-scrollbar-thumb,
+.view::-webkit-scrollbar-thumb,
+.feed-view::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+input,
+button,
+select {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+button {
+  font-family: "Press Start 2P", monospace;
+}
+
+.brand-title {
+  font-family: "Press Start 2P", monospace;
+  color: #00ffff;
+  font-size: clamp(15px, 1.3vw, 20px);
+  margin-bottom: 4px;
+  text-align: center;
+  text-shadow: 0 0 12px rgba(0, 255, 255, 0.3), 0 0 24px rgba(0, 255, 255, 0.1);
+  letter-spacing: 1px;
+}
+
+.play-btn {
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(13px, 1.1vw, 17px);
+  padding: 5px 16px;
+  background: rgba(0, 255, 255, 0.15);
+  color: #00ffff;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  letter-spacing: 1px;
+}
+
+.play-btn:hover {
+  background: rgba(0, 255, 255, 0.25);
+}
+
+.loading-bar {
+  width: 80px;
+  height: 3px;
+  background: rgba(0, 255, 255, 0.1);
+  margin-top: 6px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.loading-progress {
+  height: 100%;
+  width: 0%;
+  background: #00ffff;
+}
+
+.auth-box {
+  width: min(85%, 280px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.screen-title {
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(14px, 1.2vw, 18px);
+  color: #00ffff;
+  text-align: center;
+  margin-bottom: 3px;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  letter-spacing: 1px;
+}
+
+.helper-text,
+.status-text {
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(11px, 0.8vw, 13px);
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.status-text.error { color: #ff4444; }
+.status-text.success { color: #00ff88; }
+
+.field {
+  width: 100%;
+  padding: 3px 6px;
+  border: 1px solid rgba(0, 255, 255, 0.15);
+  background: rgba(0, 255, 255, 0.05);
+  color: #ffffff;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(11px, 0.8vw, 13px);
+  outline: none;
+  box-sizing: border-box;
+  min-height: 18px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.field::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.field:focus {
+  border-color: rgba(0, 255, 255, 0.4);
+  background: rgba(0, 255, 255, 0.08);
+}
+
+.action-row {
+  display: flex;
+  gap: 3px;
+  width: 100%;
+}
+
+.small-btn {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 5px;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  background: rgba(0, 255, 255, 0.08);
+  color: #00ffff;
+  cursor: pointer;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(10px, 0.8vw, 12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.2;
+  box-sizing: border-box;
+  min-height: 16px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.small-btn:hover {
+  background: rgba(0, 255, 255, 0.15);
+  border-color: rgba(0, 255, 255, 0.4);
+}
+
+.small-btn.secondary {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.small-btn:disabled {
+  opacity: 0.35;
+  cursor: wait;
+}
+
+.feed-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 1px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+
+.feed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1px 0 2px 0;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+  flex-shrink: 0;
+  gap: 4px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.dealer-card {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.dealer-avatar {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.avatar-1 {
+  background: #ff1493 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'><circle cx='25' cy='9' r='5' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='14' x2='25' y2='34' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='16' y1='22' x2='34' y2='22' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='34' x2='18' y2='47' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='34' x2='32' y2='47' stroke='white' stroke-width='3' stroke-linecap='round'/></svg>") center / 65% no-repeat;
+}
+.avatar-2 {
+  background: #39ff14 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'><circle cx='25' cy='9' r='5' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='14' x2='25' y2='34' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='21' x2='16' y2='12' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='21' x2='34' y2='12' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='34' x2='18' y2='47' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='34' x2='32' y2='47' stroke='white' stroke-width='3' stroke-linecap='round'/></svg>") center / 65% no-repeat;
+}
+.avatar-3 {
+  background: #00bfff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'><circle cx='25' cy='9' r='5' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='14' x2='25' y2='34' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='21' x2='16' y2='12' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='21' x2='34' y2='28' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='34' x2='18' y2='47' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='34' x2='32' y2='47' stroke='white' stroke-width='3' stroke-linecap='round'/></svg>") center / 65% no-repeat;
+}
+.avatar-4 {
+  background: #ff6b00 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'><circle cx='25' cy='9' r='5' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='14' x2='25' y2='34' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='16' y1='22' x2='34' y2='22' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='34' x2='13' y2='47' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='34' x2='37' y2='47' stroke='white' stroke-width='3' stroke-linecap='round'/></svg>") center / 65% no-repeat;
+}
+.avatar-5 {
+  background: #bf00ff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'><circle cx='25' cy='9' r='5' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='14' x2='25' y2='34' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='22' x2='13' y2='27' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='22' x2='37' y2='27' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='34' x2='18' y2='47' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='34' x2='32' y2='47' stroke='white' stroke-width='3' stroke-linecap='round'/></svg>") center / 65% no-repeat;
+}
+.avatar-6 {
+  background: #00e5ff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'><circle cx='25' cy='8' r='5' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='13' x2='25' y2='31' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='20' x2='16' y2='11' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='20' x2='34' y2='11' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='31' x2='15' y2='43' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='31' x2='35' y2='43' stroke='white' stroke-width='3' stroke-linecap='round'/></svg>") center / 65% no-repeat;
+}
+.avatar-7 {
+  background: #adff2f url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'><circle cx='25' cy='9' r='5' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='14' x2='25' y2='34' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='16' y1='22' x2='34' y2='22' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='34' x2='37' y2='29' stroke='white' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='34' x2='18' y2='47' stroke='white' stroke-width='3' stroke-linecap='round'/></svg>") center / 65% no-repeat;
+}
+
+.avatar-8 {
+  background: white url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'><polygon points='18,6 32,6 25,1' fill='none' stroke='%234a90d9' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/><circle cx='25' cy='10' r='4.5' fill='none' stroke='%234a90d9' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='14.5' x2='25' y2='34' stroke='%234a90d9' stroke-width='3' stroke-linecap='round'/><line x1='16' y1='22' x2='34' y2='22' stroke='%234a90d9' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='34' x2='18' y2='47' stroke='%234a90d9' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='34' x2='32' y2='47' stroke='%234a90d9' stroke-width='3' stroke-linecap='round'/></svg>") center / 65% no-repeat;
+}
+.avatar-9 {
+  background: white url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'><circle cx='25' cy='8' r='4.5' fill='none' stroke='%23d63031' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='12.5' x2='25' y2='19' stroke='%23d63031' stroke-width='3' stroke-linecap='round'/><polygon points='14,21 36,21 32,46 18,46' fill='none' stroke='%23d63031' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / 65% no-repeat;
+}
+.avatar-10 {
+  background: white url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'><circle cx='25' cy='9' r='4.5' fill='none' stroke='%23e6a800' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='13.5' x2='25' y2='33' stroke='%23e6a800' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='21' x2='13' y2='12' stroke='%23e6a800' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='21' x2='37' y2='12' stroke='%23e6a800' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='33' x2='18' y2='47' stroke='%23e6a800' stroke-width='3' stroke-linecap='round'/><line x1='25' y1='33' x2='32' y2='47' stroke='%23e6a800' stroke-width='3' stroke-linecap='round'/></svg>") center / 65% no-repeat;
+}
+
+.dealer-copy { min-width: 0; }
+
+.reputation-badge {
+  font-size: clamp(9px, 0.7vw, 11px);
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.5px;
+}
+.reputation-badge.positive { color: #00ff88; }
+.reputation-badge.negative { color: #ff4444; }
+
+.detail-seller {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(10px, 0.8vw, 12px);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.profile-reputation {
+  display: flex;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+}
+.rep-item {
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(9px, 0.7vw, 11px);
+  color: rgba(255, 255, 255, 0.5);
+}
+.rep-item strong {
+  color: #00ffff;
+}
+
+.admin-tabs button {
+  font-size: clamp(9px, 0.7vw, 11px);
+  padding: 4px 8px;
+}
+
+.feed-title {
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(16px, 1.5vw, 22px);
+  line-height: 1.3;
+  font-weight: 400;
+  color: #00ffff;
+  text-shadow: 0 0 12px rgba(0, 255, 255, 0.3), 0 0 24px rgba(0, 255, 255, 0.1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 1px;
+}
+
+.dealer-subtitle {
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(10px, 0.8vw, 13px);
+  margin-top: 1px;
+  color: rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.5px;
+}
+
+.search-input {
+  width: 100%;
+  min-width: 0;
+  padding: 4px 8px;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(11px, 0.8vw, 13px);
+  background: rgba(0, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 255, 0.15);
+  border-radius: 4px;
+  color: #ffffff;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  min-height: 18px;
+  outline: none;
+  letter-spacing: 0.5px;
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: clamp(8px, 0.6vw, 11px);
+}
+
+.search-input:focus {
+  border-color: rgba(0, 255, 255, 0.4);
+  background: rgba(0, 255, 255, 0.08);
+}
+
+.category-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 100%;
+  padding: 1px 0 4px 0;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.category-row::-webkit-scrollbar {
+  display: none;
+}
+
+.category-chip {
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(10px, 0.8vw, 12px);
+  white-space: nowrap;
+  background: rgba(0, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 16px;
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+}
+
+.category-chip:hover {
+  background: rgba(0, 255, 255, 0.1);
+  border-color: rgba(0, 255, 255, 0.3);
+  color: #ffffff;
+}
+
+.category-chip.active {
+  background: rgba(0, 255, 255, 0.15);
+  border-color: #00ffff;
+  color: #00ffff;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 1px;
+  min-height: 0;
+  flex: 1;
+  align-content: start;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+
+.product-card {
+  border: 1px solid rgba(0, 255, 255, 0.06);
+  background: rgba(0, 255, 255, 0.03);
+  padding: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.product-card:hover {
+  background: rgba(0, 255, 255, 0.06);
+  border-color: rgba(0, 255, 255, 0.15);
+}
+
+.product-image {
+  height: 28px;
+  background: rgba(0, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 255, 0.08);
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background: #ededed;
+  display: block;
+}
+
+.product-name {
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(12px, 1vw, 15px);
+  line-height: 1.2;
+  font-weight: 400;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.5px;
+}
+
+.product-meta-line {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(10px, 0.8vw, 12px);
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.5px;
+}
+
+.product-status {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 1px 4px;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  background: rgba(0, 255, 136, 0.08);
+  color: #00ff88;
+  border-radius: 999px;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(8px, 0.6vw, 11px);
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+  line-height: 1.2;
+  min-height: 10px;
+  letter-spacing: 0.5px;
+}
+
+.product-status.vendido {
+  border-color: rgba(255, 68, 68, 0.3);
+  background: rgba(255, 68, 68, 0.1);
+  color: #ff4444;
+}
+
+.product-status.reservado {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.product-price {
+  font-family: "Press Start 2P", monospace;
+  color: #ffd700;
+  font-size: clamp(13px, 1.1vw, 17px);
+  font-weight: 400;
+  white-space: nowrap;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+  letter-spacing: 0.5px;
+}
+
+.product-footer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1px;
+  margin-top: auto;
+  min-width: 0;
+  width: 100%;
+}
+
+.no-image {
+  color: rgba(255, 255, 255, 0.15);
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(8px, 0.6vw, 11px);
+  font-weight: 400;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  padding: 0 1px;
+}
+
+.skeleton { pointer-events: none; }
+.skeleton-box {
+  background: linear-gradient(90deg, rgba(0, 255, 255, 0.03) 25%, rgba(0, 255, 255, 0.08) 50%, rgba(0, 255, 255, 0.03) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  height: 24px;
+  border-radius: 3px;
+}
+.skeleton-line {
+  background: linear-gradient(90deg, rgba(0, 255, 255, 0.03) 25%, rgba(0, 255, 255, 0.08) 50%, rgba(0, 255, 255, 0.03) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 2px;
+  height: 3px;
+}
+.skeleton-line-sm { width: 70%; margin-top: 1px; }
+.skeleton-line-xs { width: 45%; margin-top: 1px; height: 2px; }
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.empty-text {
+  grid-column: 1 / -1;
+  padding: 24px 0;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(12px, 1vw, 16px);
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  letter-spacing: 1px;
+}
+.empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(12px, 1vw, 16px);
+  color: rgba(255, 255, 255, 0.4);
+  gap: 6px;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.scroll-sentinel {
+  height: 1px;
+  width: 100%;
+}
+.loading-more {
+  text-align: center;
+  font-family: "Press Start 2P", monospace;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: clamp(8px, 0.6vw, 11px);
+  padding: 4px 0;
+  letter-spacing: 0.5px;
+}
+
+.detail-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 3px 4px;
+  gap: 3px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.detail-image {
+  width: 100%;
+  min-height: 40px;
+  max-height: 70px;
+  aspect-ratio: 4 / 3;
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  background: rgba(0, 255, 255, 0.03);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.2);
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(11px, 0.8vw, 13px);
+  overflow: hidden;
+}
+
+.detail-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background: #ededed;
+}
+
+.detail-name {
+  font-family: "Press Start 2P", monospace;
+  color: #ffffff;
+  font-size: clamp(12px, 1vw, 15px);
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.detail-price {
+  font-family: "Press Start 2P", monospace;
+  color: #ffd700;
+  font-size: clamp(12px, 1vw, 15px);
+  font-weight: 400;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.15);
+  letter-spacing: 0.5px;
+}
+
+.detail-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.detail-pill {
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  background: rgba(0, 255, 255, 0.03);
+  border-radius: 3px;
+  padding: 2px;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(10px, 0.8vw, 12px);
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.detail-copy {
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(10px, 0.8vw, 12px);
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.4);
+  width: 100%;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  letter-spacing: 0.5px;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 3px;
+  margin-top: 2px;
+  width: 100%;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+.detail-actions .small-btn {
+  flex: 1;
+  min-width: 40px;
+}
+
+.profile-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 3px 4px;
+  gap: 3px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.05);
+  width: 100%;
+}
+
+.profile-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.profile-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 255, 255, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.profile-avatar:hover {
+  border-color: #00ffff;
+  transform: scale(1.02);
+}
+
+.avatar-change-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  padding: 2px 8px;
+  background: rgba(0, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-height: 20px;
+}
+
+.avatar-change-btn:hover {
+  background: rgba(0, 255, 255, 0.1);
+  border-color: rgba(0, 255, 255, 0.3);
+  color: #00ffff;
+}
+
+.profile-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-heading { min-width: 0; }
+
+.profile-id {
+  font-family: "Press Start 2P", monospace;
+  color: #00ffff;
+  font-size: clamp(12px, 1vw, 15px);
+  font-weight: 400;
+  letter-spacing: 1px;
+}
+
+.profile-phone {
+  font-family: "Press Start 2P", monospace;
+  color: rgba(255, 255, 255, 0.3);
+  margin-top: 1px;
+  font-size: clamp(10px, 0.8vw, 12px);
+  letter-spacing: 0.5px;
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+  padding-bottom: 0;
+}
+
+.profile-tab {
+  background: transparent;
+  border: none;
+  font-family: "Press Start 2P", monospace;
+  color: rgba(255, 255, 255, 0.3);
+  padding: 2px 6px;
+  font-size: clamp(10px, 0.8vw, 12px);
+  font-weight: 400;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.profile-tab:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.profile-tab.active {
+  color: #00ffff;
+  border-bottom-color: #00ffff;
+}
+
+.profile-section {
+  border: 1px solid rgba(0, 255, 255, 0.08);
+  background: rgba(0, 255, 255, 0.02);
+  border-radius: 4px;
+  padding: 4px;
+  display: grid;
+  gap: 3px;
+}
+
+.section-title {
+  font-family: "Press Start 2P", monospace;
+  font-weight: 400;
+  font-size: clamp(12px, 1vw, 15px);
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.profile-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+}
+
+.profile-status {
+  min-height: 8px;
+  font-family: "Press Start 2P", monospace;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: clamp(11px, 0.8vw, 13px);
+  line-height: 1.3;
+  letter-spacing: 0.5px;
+}
+
+.profile-form {
+  display: grid;
+  gap: 3px;
+}
+
+.profile-bio {
+  resize: vertical;
+  min-height: 18px;
+  font-family: "Press Start 2P", monospace;
+}
+
+.profile-bio-text {
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(10px, 0.8vw, 12px);
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.4);
+  white-space: pre-wrap;
+  letter-spacing: 0.5px;
+}
+
+.profile-name,
+.profile-location {
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(11px, 0.8vw, 13px);
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 1px;
+  letter-spacing: 0.5px;
+}
+
+.profile-toggle {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(10px, 0.8vw, 12px);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 1px 0;
+  letter-spacing: 0.5px;
+}
+
+.profile-toggle input[type="checkbox"] {
+  accent-color: #00ffff;
+  width: 10px;
+  height: 10px;
+  cursor: pointer;
+}
+
+.settings-section {
+  border: 1px solid rgba(0, 255, 255, 0.08);
+  background: rgba(0, 255, 255, 0.02);
+  border-radius: 4px;
+  padding: 4px;
+  display: grid;
+  gap: 3px;
+}
+
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 3px;
+}
+
+.settings-label {
+  font-family: "Press Start 2P", monospace;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: clamp(11px, 0.8vw, 13px);
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.settings-value {
+  font-family: "Press Start 2P", monospace;
+  color: #ffffff;
+  font-size: clamp(11px, 0.9vw, 14px);
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.admin-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  background: #0a0a0f;
+  color: #f2f2f2;
+  overflow: auto;
+  gap: 4px;
+}
+
+.admin-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.admin-title {
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(15px, 1.3vw, 20px);
+  font-weight: 400;
+  color: #00ffff;
+  letter-spacing: 1px;
+}
+
+.admin-muted {
+  font-family: "Press Start 2P", monospace;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: clamp(11px, 0.9vw, 14px);
+  line-height: 1.3;
+  letter-spacing: 0.5px;
+}
+
+.file-input { border-style: dashed; border-color: rgba(0, 255, 255, 0.2) !important; }
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hidden { display: none; }
+
+.install-banner {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: rgba(5, 5, 8, 0.95);
+  border-top: 1px solid rgba(0, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  box-sizing: border-box;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(10px, 0.8vw, 12px);
+  letter-spacing: 0.5px;
+}
+
+.install-text {
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.3;
+  flex: 1;
+}
+
+.ios-icon {
+  font-size: 1.1em;
+}
+
+.install-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.install-btn {
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  background: rgba(0, 255, 255, 0.1);
+  color: #00ffff;
+  cursor: pointer;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(8px, 0.6vw, 11px);
+  white-space: nowrap;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+}
+
+.install-btn:hover {
+  background: rgba(0, 255, 255, 0.2);
+}
+
+.install-dismiss {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(11px, 0.9vw, 14px);
+  padding: 2px 5px;
+  line-height: 1;
+  transition: all 0.3s ease;
+}
+
+.install-dismiss:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.ios-hint {
+  background: rgba(0, 0, 0, 0.5);
+  border-top-color: rgba(0, 255, 255, 0.2);
+}
+
+@media (max-width: 1024px) {
+  .feed-title {
+    font-size: clamp(15px, 1.3vw, 20px);
+  }
+
+  .category-chip {
+    font-size: clamp(9px, 0.7vw, 11px);
+    padding: 2px 8px;
+    min-height: 14px;
+  }
+
+  .product-card {
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .product-image {
+    height: 22px;
+  }
+
+  .product-name {
+    font-size: clamp(11px, 0.8vw, 13px);
+  }
+
+  .product-meta-line {
+    font-size: clamp(8px, 0.6vw, 11px);
+  }
+
+  .product-status {
+    font-size: clamp(7px, 0.5vw, 10px);
+    padding: 1px 3px;
+    min-height: 8px;
+  }
+
+  .product-price {
+    font-size: clamp(12px, 1vw, 15px);
+  }
+
+  .search-input {
+    font-size: clamp(10px, 0.8vw, 12px);
+    padding: 3px 8px;
+    min-height: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .category-row {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  .product-card {
+    min-height: 80px;
+  }
+}
+
+.avatar-picker {
+  padding: 8px 0 12px 0;
+  border-top: 1px solid rgba(0, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(0, 255, 255, 0.05);
+  margin: 4px 0 8px 0;
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  max-width: 240px;
+  margin: 0 auto;
+}
+
+.avatar-option {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  border: 2px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+}
+
+.avatar-option.unlocked:hover {
+  border-color: rgba(0, 255, 255, 0.4);
+  transform: scale(1.05);
+}
+
+.avatar-option.selected {
+  border-color: #00ffff;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
+}
+
+.avatar-option.locked {
+  opacity: 0.35;
+  cursor: not-allowed;
+  filter: grayscale(0.8);
+}
+
+.lock-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  gap: 1px;
+}
+
+.lock-overlay span:first-child {
+  font-size: 10px;
+}
+
+.lock-count {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 5px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.selected-check {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  background: #00ffff;
+  color: #000;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  border: 2px solid #000;
+}
+
+.avatar-picker-info {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  color: rgba(255, 255, 255, 0.15);
+  text-align: center;
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+}
+
+.viewport-stack {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.viewport-screen {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.bottom-nav {
+  display: flex;
+  gap: 2px;
+  padding: 3px 4px;
+  border-top: 1px solid rgba(0, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.6);
+  flex-shrink: 0;
+}
+
+.bottom-nav-btn {
+  background: transparent;
+  border: 1px solid rgba(0, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.5);
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(10px, 0.8vw, 13px);
+  padding: 3px 8px;
+  cursor: pointer;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+
+.bottom-nav-btn:hover:not(:disabled) {
+  color: #00ffff;
+  border-color: rgba(0, 255, 255, 0.4);
+}
+
+.bottom-nav-btn:disabled {
+  opacity: 0.2;
+  cursor: default;
+}
