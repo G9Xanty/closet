@@ -3,15 +3,37 @@
 -- Run this in Supabase SQL Editor
 -- ============================================
 
--- 1. Extend profiles with reputation fields
+-- 0. Create profiles table if not exists
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username TEXT DEFAULT '',
+  name TEXT DEFAULT '',
+  profile_photo TEXT DEFAULT '',
+  bio TEXT DEFAULT '',
+  location TEXT DEFAULT '',
+  phone_number TEXT DEFAULT '',
+  whatsapp_enabled BOOLEAN DEFAULT false,
+  phone_private BOOLEAN DEFAULT true,
+  avatar TEXT DEFAULT 'avatar-1',
+  reputation_score INTEGER DEFAULT 0,
+  sales_verified INTEGER DEFAULT 0,
+  sales_external INTEGER DEFAULT 0,
+  reports_count INTEGER DEFAULT 0,
+  admin_rating INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_username ON profiles (username) WHERE username != '';
+CREATE INDEX IF NOT EXISTS idx_profiles_reputation ON profiles (reputation_score DESC);
+
+-- 1. Ensure reputation columns exist (safe re-run)
 ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS reputation_score INTEGER DEFAULT 0,
   ADD COLUMN IF NOT EXISTS sales_verified INTEGER DEFAULT 0,
   ADD COLUMN IF NOT EXISTS sales_external INTEGER DEFAULT 0,
   ADD COLUMN IF NOT EXISTS reports_count INTEGER DEFAULT 0,
   ADD COLUMN IF NOT EXISTS admin_rating INTEGER DEFAULT 0;
-
-CREATE INDEX IF NOT EXISTS idx_profiles_reputation ON profiles (reputation_score DESC);
 
 -- 2. Sales table
 CREATE TABLE IF NOT EXISTS sales (
