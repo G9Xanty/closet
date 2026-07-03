@@ -1,11 +1,13 @@
 .arcade-wrapper {
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
   display: flex;
   justify-content: center;
   align-items: flex-end;
   background: #000;
   overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .arcade-machine {
@@ -13,7 +15,7 @@
   width: min(98vw, 1280px);
   margin-bottom: 0;
   aspect-ratio: 3 / 2;
-  max-height: 100vh;
+  max-height: 100dvh;
 }
 
 .desktop-frame {
@@ -70,7 +72,7 @@
 .mobile-machine {
   margin: 0 auto;
   width: min(95vw, 430px);
-  max-height: 100vh;
+  max-height: 100dvh;
 }
 
 .mobile-app {
