@@ -147,9 +147,6 @@ export function useAuth() {
       },
     });
     if (error) throw error;
-    if (!data.user || !data.user.email_confirmed_at) {
-      throw new Error("EMAIL_VERIFICATION_REQUIRED");
-    }
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {

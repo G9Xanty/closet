@@ -44,15 +44,11 @@ export default function AuthScreen() {
     setSubmitting(true);
     try {
       await signUp(email, password);
-      setMode("verify");
-      setStatus("Revisa tu correo para confirmar tu cuenta");
+      setStatus("Cuenta creada. Configura tu perfil.");
     } catch (err: any) {
       const msg = err?.message || "";
       if (msg.includes("already") || msg.includes("already registered")) {
         setStatus("Ese email ya tiene cuenta. Usa Entrar.");
-      } else if (msg.includes("EMAIL_VERIFICATION_REQUIRED")) {
-        setMode("verify");
-        setStatus("Revisa tu correo para confirmar tu cuenta");
       } else {
         setStatus("Error al registrarse");
       }
