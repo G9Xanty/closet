@@ -8,7 +8,7 @@
     "start": "node server.cjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:vercel": "npm run build && cp -r admin dist/admin",
+    "build:vercel": "vite build && cp -r admin dist/admin",
     "preview": "vite preview",
     "vercel-dev": "node api/index.cjs"
   },
