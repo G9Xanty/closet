@@ -18,12 +18,15 @@ th,td{border-bottom:1px solid #333;padding:8px;text-align:left;font-size:13px}
 .row-actions button{margin:0}
 .status{min-height:20px;color:#ff8080}
 a{color:#ff8080}
+.logout-btn{background:transparent;color:#ff6666;border-color:rgba(255,68,68,0.3);margin-left:8px;width:auto;display:inline;padding:6px 14px}
+.logout-btn:hover{background:rgba(255,68,68,0.1);border-color:#ff4444}
+.hidden{display:none}
 </style>
 </head>
 <body>
 <main class="wrap">
     <h1>Admin Closet Elander</h1>
-    <p><a href="/closet.html">Volver al arcade</a></p>
+    <p><a href="/closet.html">Volver al arcade</a> <button id="logoutBtn" class="logout-btn hidden">Cerrar sesión</button></p>
     <section class="grid">
         <div class="panel">
             <h2>Login admin</h2>
@@ -32,21 +35,21 @@ a{color:#ff8080}
             <button id="loginBtn">Entrar</button>
             <div class="status" id="loginStatus"></div>
         </div>
-        <div class="panel">
+        <div class="panel admin-area hidden">
             <h2>Estadisticas</h2>
             <p>Usuarios: <strong id="totalUsers">0</strong></p>
             <p>Prendas: <strong id="totalProducts">0</strong></p>
             <button id="refreshBtn">Actualizar</button>
         </div>
     </section>
-    <div class="status" id="status"></div>
-    <h2>Usuarios</h2>
-    <table>
+    <div class="status admin-area hidden" id="status"></div>
+    <h2 class="admin-area hidden">Usuarios</h2>
+    <table class="admin-area hidden">
         <thead><tr><th>Email</th><th>Username</th><th>Dealer</th><th>Estado</th><th>Acciones</th></tr></thead>
         <tbody id="usersBody"></tbody>
     </table>
-    <h2>Prendas</h2>
-    <table>
+    <h2 class="admin-area hidden">Prendas</h2>
+    <table class="admin-area hidden">
         <thead><tr><th>Nombre</th><th>Precio</th><th>Vendedor</th><th>Acciones</th></tr></thead>
         <tbody id="productsBody"></tbody>
     </table>
@@ -79,14 +82,26 @@ async function api(path, options = {}){
 }
 function money(value){return "₡"+Number(value||0).toLocaleString("es-CR")}
 function setStatus(msg){$("status").textContent=msg||""}
+function showAdmin(visible){
+    document.querySelectorAll(".admin-area").forEach(el => el.classList.toggle("hidden", !visible));
+    $("logoutBtn").classList.toggle("hidden", !visible);
+}
 async function login(){
     try{
         const data = await api("/api/auth/login",{method:"POST",body:JSON.stringify({email:$("email").value.trim(),password:$("password").value})});
         if(!data.user.is_admin) throw new Error("Esta cuenta no es admin.");
         localStorage.setItem(TOKEN_KEY,data.token);
         $("loginStatus").textContent="Admin conectado.";
+        showAdmin(true);
         await load();
     }catch(e){$("loginStatus").textContent=e.message}
+}
+async function logout(){
+    await api("/api/auth/logout",{method:"POST"}).catch(()=>{});
+    localStorage.removeItem(TOKEN_KEY);
+    $("email").value=""; $("password").value="";
+    $("loginStatus").textContent="Sesion cerrada.";
+    showAdmin(false);
 }
 async function load(){
     try{
@@ -104,6 +119,7 @@ async function load(){
     }catch(e){setStatus(e.message)}
 }
 $("loginBtn").onclick=login;
+$("logoutBtn").onclick=logout;
 $("refreshBtn").onclick=load;
 document.body.addEventListener("click", async event=>{
     const b=event.target;
@@ -111,7 +127,10 @@ document.body.addEventListener("click", async event=>{
     if(b.dataset.delUser && confirm("Eliminar usuario y prendas?")){await api("/api/admin/users/"+b.dataset.delUser,{method:"DELETE"}); await load();}
     if(b.dataset.delProduct && confirm("Eliminar prenda?")){await api("/api/products/"+b.dataset.delProduct,{method:"DELETE"}); await load();}
 });
-load().catch(()=>{});
+if(localStorage.getItem(TOKEN_KEY)){
+    showAdmin(true);
+    load().catch(()=>{ showAdmin(false); localStorage.removeItem(TOKEN_KEY); });
+}
 </script>
 </body>
 </html>

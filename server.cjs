@@ -29,8 +29,29 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+function createSafeClient(url, key) {
+  if (!url || !key) {
+    const errMsg = "Supabase no configurado. Configura SUPABASE_URL y SUPABASE_ANON_KEY.";
+    const errResult = () => Promise.resolve({ data: null, error: new Error(errMsg) });
+    const stubErr = () => ({ error: new Error(errMsg) });
+    const authStub = { getUser: errResult, signOut: () => Promise.resolve(), signUp: errResult, signInWithPassword: errResult, admin: { getUserById: errResult, listUsers: errResult, updateUserById: errResult } };
+    const queryChain = new Proxy({}, { get: () => () => queryChain });
+    queryChain.then = undefined;
+    const selectProxy = new Proxy(() => errResult(), { get: (t, prop) => prop === "then" ? undefined : () => selectProxy });
+    const fromStub = () => queryChain;
+    queryChain.select = () => selectProxy;
+    queryChain.insert = () => selectProxy;
+    queryChain.update = () => selectProxy;
+    queryChain.delete = () => selectProxy;
+    queryChain.single = () => selectProxy;
+    const storageStub = { from: () => ({ upload: stubErr, getPublicUrl: () => ({ data: { publicUrl: "" } }) }), createBucket: stubErr };
+    return { auth: authStub, from: fromStub, storage: storageStub, rpc: stubErr };
+  }
+  return createClient(url, key);
+}
+
+const supabase = createSafeClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseAdmin = createSafeClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 const ADMIN_EMAIL = normalizeEmail(process.env.ADMIN_EMAIL || "admin@closet.local");
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
@@ -1235,7 +1256,7 @@ app.delete("/api/products/:id", requireUser, async (req, res) => {
 
 /* ── Admin routes (paginated) ──────────────── */
 
-const createAdminRouter = require("./api/admin.cjs");
+const createAdminRouter = require("./server/api/admin.cjs");
 const adminRouter = createAdminRouter({ supabase, supabaseAdmin, requireUser, requireAdmin, logAdminAction, publicProduct, adminLimiter });
 app.use("/api", adminRouter);
 
