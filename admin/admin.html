@@ -90,12 +90,16 @@ async function login(){
 }
 async function load(){
     try{
-        const data = await api("/api/admin/dashboard");
-        users=data.users||[]; products=data.products||[];
-        $("totalUsers").textContent=data.stats.users||0;
-        $("totalProducts").textContent=data.stats.products||0;
+        const [metrics, userRes, prodRes] = await Promise.all([
+            api("/api/admin/metrics"),
+            api("/api/admin/users?page=1&per_page=50"),
+            api("/api/admin/products?limit=50")
+        ]);
+        users=userRes.users||[]; products=prodRes.products||[];
+        $("totalUsers").textContent=metrics.users||0;
+        $("totalProducts").textContent=metrics.products||0;
         $("usersBody").innerHTML=users.map(u => "<tr><td>"+esc(u.email)+"</td><td>"+esc(u.username)+"</td><td>"+esc(u.dealer_id)+"</td><td>"+(u.banned?"Banneado":"Activo")+"</td><td class=\"row-actions\"><button data-ban=\""+esc(u.id)+"\">Bannear</button><button data-del-user=\""+esc(u.id)+"\">Eliminar</button></td></tr>").join("");
-        $("productsBody").innerHTML=products.map(p => "<tr><td>"+esc(p.name)+"</td><td>"+money(p.price)+"</td><td>"+esc(p.seller_username)+"</td><td><button data-del-product=\""+esc(p.id)+"\">Eliminar</button></td></tr>").join("");
+        $("productsBody").innerHTML=products.map(p => "<tr><td>"+esc(p.name)+"</td><td>"+money(p.price)+"</td><td>"+esc(p.seller_name||p.seller_username)+"</td><td><button data-del-product=\""+esc(p.id)+"\">Eliminar</button></td></tr>").join("");
         setStatus("Actualizado.");
     }catch(e){setStatus(e.message)}
 }

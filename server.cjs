@@ -940,18 +940,57 @@ app.post("/api/uploads/multiple", requireUser, uploadLimiter, upload.array("imag
   }
 });
 
-app.get("/api/products", apiLimiter, async (req, res) => {
+async function productsFallback(category, search, cursor, pageSize, res) {
   try {
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-      return res.status(500).json({ ok: false, message: "Supabase env vars missing" });
+    let q = supabase
+      .from("products")
+      .select("*")
+      .neq("status", "hidden")
+      .order("created_at", { ascending: false })
+      .limit(pageSize + 1);
+    if (category && category !== "all") q = q.eq("category", category);
+    if (search) {
+      const s = `%${search}%`;
+      q = q.or(`title.ilike.${s},description.ilike.${s}`);
     }
+    if (cursor) q = q.lt("created_at", cursor);
+    const { data: rows, error } = await q;
+    if (error) return res.status(200).json({ ok: true, products: [], nextCursor: null, hasMore: false });
+    const hasMore = rows && rows.length > pageSize;
+    if (hasMore) rows.pop();
+    const nextCursor = rows && rows.length > 0 ? rows[rows.length - 1].created_at : null;
+    const userIds = [...new Set((rows || []).map(r => r.user_id).filter(Boolean))];
+    const userMap = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, username, avatar, phone_number, phone_private, whatsapp_enabled, reputation_score")
+        .in("id", userIds);
+      if (profiles) {
+        for (const p of profiles) {
+          const visible = p.phone_private === false && p.whatsapp_enabled === true;
+          userMap[p.id] = { username: p.username || "", dealer_id: p.username || "", avatar: p.avatar || "avatar-1", whatsapp_phone: visible ? (p.phone_number || "") : "", show_phone: visible, reputation_score: p.reputation_score || 0 };
+        }
+      }
+      for (const uid of userIds) {
+        if (!userMap[uid]) userMap[uid] = { username: "", dealer_id: "", avatar: "avatar-1", whatsapp_phone: "", show_phone: false, reputation_score: 0 };
+      }
+    }
+    const products = (rows || []).map(row => {
+      const s = userMap[row.user_id] || {};
+      return publicProduct({ ...row, seller_username: s.username, seller_dealer_id: s.dealer_id, seller_avatar: s.avatar, seller_reputation: s.reputation_score || 0, seller_phone: row.seller_phone || s.whatsapp_phone || "" });
+    });
+    res.json({ ok: true, products, nextCursor, hasMore });
+  } catch { res.status(200).json({ ok: true, products: [], nextCursor: null, hasMore: false }); }
+}
 
-    const search = String(req.query.search || "").trim();
-    const category = String(req.query.category || "").trim();
-    const cursor = String(req.query.cursor || "");
-    const limit = Number(req.query.limit);
-    const pageSize = Number.isFinite(limit) && limit > 0 ? Math.min(limit, 40) : 20;
-
+app.get("/api/products", apiLimiter, async (req, res) => {
+  const search = String(req.query.search || "").trim();
+  const category = String(req.query.category || "").trim();
+  const cursor = String(req.query.cursor || "");
+  const limit = Number(req.query.limit);
+  const pageSize = Number.isFinite(limit) && limit > 0 ? Math.min(limit, 40) : 20;
+  try {
     let query = supabase
       .from("products")
       .select(`
@@ -969,36 +1008,31 @@ app.get("/api/products", apiLimiter, async (req, res) => {
       .order("created_at", { ascending: false })
       .limit(pageSize + 1);
 
-    if (category && category !== "all") {
-      query = query.eq("category", category);
-    }
-
+    if (category && category !== "all") query = query.eq("category", category);
     if (search) {
       const q = `%${search}%`;
       query = query.or(`title.ilike.${q},description.ilike.${q}`);
     }
-
-    if (cursor) {
-      query = query.lt("created_at", cursor);
-    }
+    if (cursor) query = query.lt("created_at", cursor);
 
     const { data: rows, error } = await query;
 
     if (error) {
+      if (error.message && error.message.toLowerCase().includes("relationship")) {
+        console.warn("[PRODUCTS] JOIN no disponible, usando fallback 2 queries");
+        return productsFallback(category, search, cursor, pageSize, res);
+      }
       console.error("[SUPABASE ERROR]", error);
       return res.status(200).json({ ok: true, products: [], nextCursor: null, hasMore: false });
     }
 
     const hasMore = rows && rows.length > pageSize;
     if (hasMore) rows.pop();
-
-    const nextCursor = rows && rows.length > 0
-      ? rows[rows.length - 1].created_at
-      : null;
+    const nextCursor = rows && rows.length > 0 ? rows[rows.length - 1].created_at : null;
 
     const products = (rows || []).map(row => {
       const profile = row.profiles || {};
-      const phoneVisible = profile.phone_private === false && profile.whatsapp_enabled === true;
+      const visible = profile.phone_private === false && profile.whatsapp_enabled === true;
       const { profiles: _unused, ...productData } = row;
       return publicProduct({
         ...productData,
@@ -1006,19 +1040,14 @@ app.get("/api/products", apiLimiter, async (req, res) => {
         seller_dealer_id: profile.username || "",
         seller_avatar: profile.avatar || "avatar-1",
         seller_reputation: profile.reputation_score || 0,
-        seller_phone: row.seller_phone || (phoneVisible ? (profile.phone_number || "") : "") || "",
+        seller_phone: row.seller_phone || (visible ? (profile.phone_number || "") : "") || "",
       });
     });
 
     res.json({ ok: true, products, nextCursor, hasMore });
   } catch (error) {
     console.error("[PRODUCTS FATAL]", error);
-    res.status(200).json({
-      ok: true,
-      products: [],
-      nextCursor: null,
-      hasMore: false,
-    });
+    productsFallback(category, search, cursor, pageSize, res).catch(() => res.status(200).json({ ok: true, products: [], nextCursor: null, hasMore: false }));
   }
 });
 
@@ -1204,47 +1233,11 @@ app.delete("/api/products/:id", requireUser, async (req, res) => {
   }
 });
 
-app.get("/api/admin/dashboard", adminLimiter, requireUser, requireAdmin, async (_req, res) => {
-  try {
-    const { data: all } = await supabaseAdmin.auth.admin.listUsers();
-    const { count: productCount } = await supabase.from("products").select("*", { count: "exact", head: true });
-    const { data: products } = await supabase.from("products").select("*").order("created_at", { ascending: false }).limit(100);
+/* ── Admin routes (paginated) ──────────────── */
 
-    const users = all.users.map(u => {
-      const m = u.user_metadata || {};
-      return { id: u.id, email: u.email, dealer_id: m.dealer_id, username: m.username || m.dealer_id, avatar: m.avatar || "avatar-1", banned: Boolean(m.banned), is_admin: Boolean(m.is_admin), created_at: u.created_at };
-    });
-
-    const mappedProducts = (products || []).map(row => {
-      const owner = users.find(u => String(u.id) === String(row.user_id));
-      return { ...publicProduct(row), seller_name: owner?.username || owner?.dealer_id || "", seller_email: owner?.email || "" };
-    });
-
-    res.json({ stats: { users: users.length, products: productCount || 0 }, users, products: mappedProducts });
-  } catch (error) {
-    console.error(error); res.status(500).json({ error: "Error interno del servidor." });
-  }
-});
-
-app.post("/api/admin/users/:id/ban", adminLimiter, requireUser, requireAdmin, async (req, res) => {
-  if (String(req.params.id) === String(req.user.id)) return res.status(400).json({ error: "No puedes bannearte a ti mismo." });
-  const { data: { user } } = await supabaseAdmin.auth.admin.getUserById(req.params.id);
-  if (!user) return res.status(404).json({ error: "Usuario no encontrado." });
-  const meta = user.user_metadata || {};
-  await supabaseAdmin.auth.admin.updateUserById(req.params.id, { user_metadata: { ...meta, banned: true } });
-  await supabaseAdmin.auth.admin.signOut(req.params.id).catch(() => {});
-  await supabase.from("products").update({ status: "hidden" }).eq("user_id", req.params.id).catch(() => {});
-  await logAdminAction(req.user.id, "ban", req.params.id, req);
-  res.json({ ok: true });
-});
-
-app.delete("/api/admin/users/:id", adminLimiter, requireUser, requireAdmin, async (req, res) => {
-  if (String(req.params.id) === String(req.user.id)) return res.status(400).json({ error: "No puedes eliminar tu propia cuenta admin." });
-  await supabase.from("products").delete().eq("user_id", req.params.id);
-  await supabaseAdmin.auth.admin.deleteUser(req.params.id);
-  await logAdminAction(req.user.id, "delete_user", req.params.id, req);
-  res.json({ ok: true });
-});
+const createAdminRouter = require("./api/admin.cjs");
+const adminRouter = createAdminRouter({ supabase, supabaseAdmin, requireUser, requireAdmin, logAdminAction, publicProduct, adminLimiter });
+app.use("/api", adminRouter);
 
 /* ── Sales routes ─────────────────────────── */
 
