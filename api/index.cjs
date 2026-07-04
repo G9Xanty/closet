@@ -1,4 +1,4 @@
-const { app, initDb } = require("../server.cjs");
+const { app, initDb } = require("./server.cjs");
 
 initDb().catch(() => {});
 
