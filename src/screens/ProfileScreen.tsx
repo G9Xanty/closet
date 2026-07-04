@@ -211,7 +211,11 @@ export default function ProfileScreen() {
             <div className="section-title">Acciones</div>
             <button className="small-btn" onClick={() => goTo("feed")}>Ir al feed</button>
             <button className="small-btn" onClick={() => goTo("upload")}>Vender prenda</button>
-            <button className="small-btn secondary" onClick={handleLogout}>Salir</button>
+          </div>
+          <div className="profile-section">
+            <div className="section-title">Cuenta</div>
+            <button className="small-btn secondary" onClick={handleLogout}>Cambiar cuenta</button>
+            <button className="small-btn secondary" onClick={handleLogout} style={{ borderColor: "rgba(255,68,68,0.3)", color: "#ff6666" }}>Cerrar sesión</button>
           </div>
         </div>
       )}

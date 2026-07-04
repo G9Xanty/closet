@@ -942,10 +942,7 @@ app.post("/api/uploads/multiple", requireUser, uploadLimiter, upload.array("imag
 
 app.get("/api/products", apiLimiter, async (req, res) => {
   try {
-    console.log("[PRODUCTS REQUEST]", { query: req.query });
-
     if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-      console.error("[PRODUCTS FATAL] Missing Supabase env vars");
       return res.status(500).json({ ok: false, message: "Supabase env vars missing" });
     }
 
@@ -957,7 +954,17 @@ app.get("/api/products", apiLimiter, async (req, res) => {
 
     let query = supabase
       .from("products")
-      .select("*")
+      .select(`
+        *,
+        profiles!left (
+          username,
+          avatar,
+          reputation_score,
+          phone_number,
+          phone_private,
+          whatsapp_enabled
+        )
+      `)
       .neq("status", "hidden")
       .order("created_at", { ascending: false })
       .limit(pageSize + 1);
@@ -976,7 +983,6 @@ app.get("/api/products", apiLimiter, async (req, res) => {
     }
 
     const { data: rows, error } = await query;
-    console.log("[SUPABASE RESPONSE]", { dataLength: rows?.length, error });
 
     if (error) {
       console.error("[SUPABASE ERROR]", error);
@@ -990,45 +996,17 @@ app.get("/api/products", apiLimiter, async (req, res) => {
       ? rows[rows.length - 1].created_at
       : null;
 
-    const userIds = [...new Set((rows || []).map(r => r.user_id).filter(Boolean))];
-    const userMap = {};
-    if (userIds.length > 0) {
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, username, avatar, phone_number, phone_private, whatsapp_enabled, reputation_score")
-        .in("id", userIds);
-      if (profilesError) {
-        console.error("[PROFILES ERROR]", profilesError);
-      }
-      if (profiles) {
-        for (const p of profiles) {
-          const phoneVisible = p.phone_private === false && p.whatsapp_enabled === true;
-          userMap[p.id] = {
-            username: p.username || "",
-            dealer_id: p.username || "",
-            avatar: p.avatar || "avatar-1",
-            whatsapp_phone: phoneVisible ? (p.phone_number || "") : "",
-            show_phone: phoneVisible,
-            reputation_score: p.reputation_score || 0,
-          };
-        }
-      }
-      for (const uid of userIds) {
-        if (!userMap[uid]) {
-          userMap[uid] = { username: "", dealer_id: "", avatar: "avatar-1", whatsapp_phone: "", show_phone: false, reputation_score: 0 };
-        }
-      }
-    }
-
     const products = (rows || []).map(row => {
-      const seller = userMap[row.user_id] || {};
+      const profile = row.profiles || {};
+      const phoneVisible = profile.phone_private === false && profile.whatsapp_enabled === true;
+      const { profiles: _unused, ...productData } = row;
       return publicProduct({
-        ...row,
-        seller_username: seller.username,
-        seller_dealer_id: seller.dealer_id,
-        seller_avatar: seller.avatar,
-        seller_reputation: seller.reputation_score || 0,
-        seller_phone: row.seller_phone || seller.whatsapp_phone || "",
+        ...productData,
+        seller_username: profile.username || "",
+        seller_dealer_id: profile.username || "",
+        seller_avatar: profile.avatar || "avatar-1",
+        seller_reputation: profile.reputation_score || 0,
+        seller_phone: row.seller_phone || (phoneVisible ? (profile.phone_number || "") : "") || "",
       });
     });
 
@@ -1491,65 +1469,8 @@ async function initDb() {
     console.log("Bucket product-images ya existe o no se pudo crear. Verificar en Supabase dashboard.");
   }
 
-  try {
-    const { error: sqlError } = await supabase.rpc("exec_sql", {
-      sql: `
-        CREATE TABLE IF NOT EXISTS profiles (
-          id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-          username TEXT DEFAULT '',
-          name TEXT DEFAULT '',
-          profile_photo TEXT DEFAULT '',
-          bio TEXT DEFAULT '',
-          location TEXT DEFAULT '',
-          phone_number TEXT DEFAULT '',
-          whatsapp_enabled BOOLEAN DEFAULT false,
-          phone_private BOOLEAN DEFAULT true,
-          avatar TEXT DEFAULT 'avatar-1',
-          reputation_score INTEGER DEFAULT 0,
-          sales_verified INTEGER DEFAULT 0,
-          sales_external INTEGER DEFAULT 0,
-          reports_count INTEGER DEFAULT 0,
-          admin_rating INTEGER DEFAULT 0,
-          created_at TIMESTAMPTZ DEFAULT NOW(),
-          updated_at TIMESTAMPTZ DEFAULT NOW()
-        );
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_username
-          ON profiles (username) WHERE username != '';
-        CREATE INDEX IF NOT EXISTS idx_profiles_reputation
-          ON profiles (reputation_score DESC);
-      `
-    });
-    if (sqlError) {
-      console.log("Nota: exec_sql no disponible. Crea la tabla profiles manualmente en Supabase usando docs/profiles-table.sql");
-    } else {
-      console.log("Tabla profiles creada/verificada.");
-    }
-  } catch {
-    console.log("Nota: No se pudo crear profiles via RPC. Creala manualmente en Supabase.");
-  }
-
-  try {
-    const { error: auditError } = await supabase.rpc("exec_sql", {
-      sql: `
-        CREATE TABLE IF NOT EXISTS admin_audit_log (
-          id BIGSERIAL PRIMARY KEY,
-          admin_id UUID NOT NULL,
-          action TEXT NOT NULL,
-          target_id TEXT,
-          ip TEXT DEFAULT '',
-          user_agent TEXT DEFAULT '',
-          created_at TIMESTAMPTZ DEFAULT NOW()
-        );
-      `
-    });
-    if (auditError) {
-      console.log("Nota: Crea la tabla admin_audit_log manualmente en Supabase.");
-    } else {
-      console.log("Tabla admin_audit_log creada/verificada.");
-    }
-  } catch {
-    console.log("Nota: No se pudo crear admin_audit_log via RPC.");
-  }
+  // Las tablas (profiles, products, etc.) se crean via migraciones SQL.
+  // Ejecutar supabase/migrations/ en el SQL Editor de Supabase.
 
   if (ADMIN_PASSWORD && isValidEmail(ADMIN_EMAIL)) {
     try {

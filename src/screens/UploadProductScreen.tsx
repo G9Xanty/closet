@@ -15,50 +15,7 @@ const CATEGORIES = ["camisetas", "hoodies", "pantalones", "accesorios", "otros"]
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const MAX_DIMENSION = 2500;
-const COMPRESS_QUALITY = 0.8;
-const COMPRESS_MAX_DIM = 1920;
-
-async function compressImage(file: File): Promise<File> {
-  if (!file.type.startsWith("image/")) return file;
-  const supportedForCanvas = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp"];
-  if (!supportedForCanvas.includes(file.type)) return file;
-
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      let { width, height } = img;
-      if (width > COMPRESS_MAX_DIM || height > COMPRESS_MAX_DIM) {
-        const ratio = Math.min(COMPRESS_MAX_DIM / width, COMPRESS_MAX_DIM / height);
-        width = Math.round(width * ratio);
-        height = Math.round(height * ratio);
-      }
-
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) { resolve(file); return; }
-
-      ctx.drawImage(img, 0, 0, width, height);
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            const outType = file.type === "image/png" ? "image/png" : "image/jpeg";
-            const ext = outType === "image/png" ? "png" : "jpg";
-            resolve(new File([blob], file.name.replace(/\.[^.]+$/, "") + "." + ext, { type: outType }));
-          } else {
-            resolve(file);
-          }
-        },
-        file.type === "image/png" ? "image/png" : "image/jpeg",
-        file.type === "image/png" ? 1 : COMPRESS_QUALITY
-      );
-    };
-    img.onerror = () => resolve(file);
-    img.src = URL.createObjectURL(file);
-  });
-}
+const MAX_IMAGES = 6;
 
 function validateFile(file: File): string | null {
   if (!ALLOWED_TYPES.includes(file.type)) {
@@ -92,7 +49,7 @@ export default function UploadProductScreen() {
 
   async function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(e.target.files || []);
-    const remaining = 4 - files.length;
+    const remaining = MAX_IMAGES - files.length;
     const toAdd = selected.slice(0, remaining);
 
     const errors: string[] = [];
@@ -105,25 +62,6 @@ export default function UploadProductScreen() {
         errors.push(`${file.name}: ${err}`);
         continue;
       }
-
-      let img: HTMLImageElement;
-      try {
-        img = await new Promise((resolve, reject) => {
-          const i = new Image();
-          i.onload = () => resolve(i);
-          i.onerror = () => reject(new Error("No se pudo leer"));
-          i.src = URL.createObjectURL(file);
-        });
-      } catch {
-        errors.push(`${file.name}: No se pudo leer la imagen`);
-        continue;
-      }
-
-      if (img.naturalWidth > MAX_DIMENSION || img.naturalHeight > MAX_DIMENSION) {
-        errors.push(`${file.name}: Dimensiones muy grandes (máx ${MAX_DIMENSION}x${MAX_DIMENSION}px)`);
-        continue;
-      }
-
       valid.push(file);
       validPreviews.push(URL.createObjectURL(file));
     }
@@ -161,21 +99,13 @@ export default function UploadProductScreen() {
     if (!trimmedSize) { setStatus("Ingresa la talla"); setIsError(true); return; }
 
     setUploading(true);
-    setStatus("Comprimiendo imágenes...");
+    setStatus("Subiendo imágenes...");
 
     try {
-      const compressedFiles: File[] = [];
-      for (const file of files) {
-        const compressed = await compressImage(file);
-        compressedFiles.push(compressed);
-      }
-
-      setStatus("Subiendo imágenes...");
-
       const imageUrls: string[] = [];
       const storagePaths: string[] = [];
 
-      for (const file of compressedFiles) {
+      for (const file of files) {
         const formData = new FormData();
         formData.append("image", file);
 
@@ -267,8 +197,8 @@ export default function UploadProductScreen() {
         </div>
 
         <div className="profile-section">
-          <div className="section-title">Imágenes ({files.length}/4, máx. 10MB c/u)</div>
-          <input ref={fileInputRef} type="file" className="field file-input" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple onChange={handleFiles} disabled={uploading || files.length >= 4} />
+          <div className="section-title">Imágenes ({files.length}/{MAX_IMAGES}, máx. 10MB c/u)</div>
+          <input ref={fileInputRef} type="file" className="field file-input" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple onChange={handleFiles} disabled={uploading || files.length >= MAX_IMAGES} />
           {fileErrors.length > 0 && fileErrors.map((err, i) => (
             <div key={i} className="status-text error" style={{ fontSize: "0.5rem" }}>{err}</div>
           ))}
