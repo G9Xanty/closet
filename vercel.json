@@ -1,6 +1,6 @@
 {
   "version": 2,
-      "buildCommand": "npm run build:vercel",
+  "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "functions": {

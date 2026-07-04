@@ -18,12 +18,18 @@ if (process.env.VERCEL !== '1') {
   }
 
   initDb()
-    .then(() => app.listen(PORT, HOST, () => {
-      const ip = getLocalIP();
-      console.log(`Closet Elander backend listo`);
-      console.log(`  Local:   http://localhost:${PORT}`);
-      console.log(`  Red:     http://${ip}:${PORT}`);
-    }))
+    .then(() => {
+      const srv = app.listen(PORT, HOST, () => {
+        const ip = getLocalIP();
+        console.log(`Closet Elander backend listo`);
+        console.log(`  Local:   http://localhost:${PORT}`);
+        console.log(`  Red:     http://${ip}:${PORT}`);
+      });
+      srv.on("error", err => {
+        console.error("Error al iniciar servidor:", err.message);
+        process.exit(1);
+      });
+    })
     .catch(error => {
       console.error("Error al iniciar:", error.message);
       process.exit(1);

@@ -1334,79 +1334,7 @@ app.post("/api/reports", requireUser, async (req, res) => {
   }
 });
 
-/* ── Admin: Sales routes ──────────────────── */
-
-app.get("/api/admin/sales", adminLimiter, requireUser, requireAdmin, async (req, res) => {
-  try {
-    const status = String(req.query.status || "").trim();
-    let query = supabase
-      .from("sales")
-      .select("*, product:products(*), buyer:profiles!sales_buyer_id_fkey(id, username, avatar), seller:profiles!sales_seller_id_fkey(id, username, avatar)")
-      .order("created_at", { ascending: false })
-      .limit(100);
-    if (status) query = query.eq("status", status);
-    const { data: sales } = await query;
-    res.json({ sales: sales || [] });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post("/api/admin/sales/:id/verify", adminLimiter, requireUser, requireAdmin, async (req, res) => {
-  try {
-    const { data: sale } = await supabase.from("sales").select("*").eq("id", req.params.id).single();
-    if (!sale) return res.status(404).json({ error: "Venta no encontrada." });
-    if (sale.status !== "requested" && sale.status !== "external") return res.status(400).json({ error: "Solo se pueden verificar ventas requested o external." });
-
-    await supabase.from("sales").update({
-      status: "completed",
-      verified: true,
-      verified_by: req.user.id,
-      verified_at: new Date().toISOString(),
-      completed_at: new Date().toISOString(),
-    }).eq("id", sale.id);
-
-    await supabase.from("products").update({ status: "sold" }).eq("id", sale.product_id);
-
-    const points = sale.type === "internal" ? 50 : 5;
-    const eventType = sale.type === "internal" ? "sale_verified" : "sale_external";
-
-    await supabase.from("reputation_events").insert({
-      user_id: sale.seller_id,
-      sale_id: sale.id,
-      event_type: eventType,
-      points,
-    });
-
-    if (sale.type === "internal") {
-      const col = sale.type === "internal" ? "sales_verified" : "sales_external";
-      await supabase.rpc("exec_sql", {
-        sql: `UPDATE profiles SET reputation_score = COALESCE(reputation_score,0) + ${points}, ${col} = COALESCE(${col},0) + 1 WHERE id = '${sale.seller_id}'`
-      }).catch(() => {});
-    }
-
-    await logAdminAction(req.user.id, `verify_sale_${sale.type}`, sale.id, req);
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post("/api/admin/sales/:id/reject", adminLimiter, requireUser, requireAdmin, async (req, res) => {
-  try {
-    const { data: sale } = await supabase.from("sales").select("*").eq("id", req.params.id).single();
-    if (!sale) return res.status(404).json({ error: "Venta no encontrada." });
-
-    await supabase.from("sales").update({ status: "rejected" }).eq("id", sale.id);
-    await supabase.from("products").update({ status: "disponible" }).eq("id", sale.product_id);
-    await logAdminAction(req.user.id, "reject_sale", sale.id, req);
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-/* ── Admin routes (paginated) moved to api/admin.cjs ──── */
+/* ── Admin routes moved to api/admin.cjs ──── */
 
 function slug(name) {
   return name.toLowerCase().replace(/[^a-z0-9-]/g, "-");
@@ -1450,7 +1378,8 @@ async function initDb() {
   }
 }
 
-if (process.env.VERCEL !== '1') {
+if (require.main === module) {
+  /* Solo inicia cuando se ejecuta directamente, no cuando server.cjs lo requiere */
   initDb()
     .then(() => app.listen(PORT, HOST, () => {
       const ip = getLocalIP();

@@ -180,14 +180,31 @@ module.exports = function createAdminRouter(deps) {
 
   router.post("/admin/sales/:id/verify", adminLimiter, requireUser, requireAdmin, async (req, res) => {
     try {
-      const { data } = await supabase
-        .from("sales")
-        .update({ verified: true, verified_by: req.user.id, verified_at: new Date().toISOString(), status: "completed", completed_at: new Date().toISOString() })
-        .eq("id", req.params.id)
-        .select()
-        .single();
-      if (!data) return res.status(404).json({ error: "Venta no encontrada." });
-      res.json({ ok: true, sale: data });
+      const { data: sale } = await supabase.from("sales").select("*").eq("id", req.params.id).single();
+      if (!sale) return res.status(404).json({ error: "Venta no encontrada." });
+      if (sale.status !== "requested" && sale.status !== "external") return res.status(400).json({ error: "Solo se pueden verificar ventas requested o external." });
+
+      await supabase.from("sales").update({
+        status: "completed", verified: true, verified_by: req.user.id,
+        verified_at: new Date().toISOString(), completed_at: new Date().toISOString()
+      }).eq("id", sale.id);
+
+      await supabase.from("products").update({ status: "sold" }).eq("id", sale.product_id);
+
+      const points = sale.type === "internal" ? 50 : 5;
+      await supabase.from("reputation_events").insert({
+        user_id: sale.seller_id, sale_id: sale.id,
+        event_type: sale.type === "internal" ? "sale_verified" : "sale_external", points
+      }).catch(() => {});
+
+      if (sale.type === "internal") {
+        await supabase.rpc("exec_sql", {
+          sql: `UPDATE profiles SET reputation_score = COALESCE(reputation_score,0) + ${points}, sales_verified = COALESCE(sales_verified,0) + 1 WHERE id = '${sale.seller_id}'`
+        }).catch(() => {});
+      }
+
+      await logAdminAction(req.user.id, `verify_sale_${sale.type}`, sale.id, req);
+      res.json({ ok: true });
     } catch (error) {
       console.error(error); res.status(500).json({ error: "Error interno del servidor." });
     }
@@ -195,14 +212,13 @@ module.exports = function createAdminRouter(deps) {
 
   router.post("/admin/sales/:id/reject", adminLimiter, requireUser, requireAdmin, async (req, res) => {
     try {
-      const { data } = await supabase
-        .from("sales")
-        .update({ status: "rejected" })
-        .eq("id", req.params.id)
-        .select()
-        .single();
-      if (!data) return res.status(404).json({ error: "Venta no encontrada." });
-      res.json({ ok: true, sale: data });
+      const { data: sale } = await supabase.from("sales").select("*").eq("id", req.params.id).single();
+      if (!sale) return res.status(404).json({ error: "Venta no encontrada." });
+
+      await supabase.from("sales").update({ status: "rejected" }).eq("id", sale.id);
+      await supabase.from("products").update({ status: "disponible" }).eq("id", sale.product_id);
+      await logAdminAction(req.user.id, "reject_sale", sale.id, req);
+      res.json({ ok: true });
     } catch (error) {
       console.error(error); res.status(500).json({ error: "Error interno del servidor." });
     }
@@ -274,6 +290,44 @@ module.exports = function createAdminRouter(deps) {
       if (typeof logAdminAction === "function") {
         await logAdminAction(req.user.id, `report_${action}`, report.id, req);
       }
+      res.json({ ok: true });
+    } catch (error) {
+      console.error(error); res.status(500).json({ error: "Error interno del servidor." });
+    }
+  });
+
+  /* ── Ban user ─────────────────────────────── */
+
+  router.post("/admin/users/:id/ban", adminLimiter, requireUser, requireAdmin, async (req, res) => {
+    try {
+      if (String(req.params.id) === String(req.user.id)) return res.status(400).json({ error: "No puedes bannearte a ti mismo." });
+      const { data: { user } } = await supabaseAdmin.auth.admin.getUserById(req.params.id);
+      if (!user) return res.status(404).json({ error: "Usuario no encontrado." });
+      const meta = user.user_metadata || {};
+      const nowBanned = !meta.banned;
+      await supabaseAdmin.auth.admin.updateUserById(req.params.id, { user_metadata: { ...meta, banned: nowBanned } });
+      if (nowBanned) {
+        await supabaseAdmin.auth.admin.signOut(req.params.id).catch(() => {});
+        await supabase.from("products").update({ status: "hidden" }).eq("user_id", req.params.id).catch(() => {});
+      } else {
+        await supabase.from("products").update({ status: "disponible" }).eq("user_id", req.params.id).catch(() => {});
+      }
+      await logAdminAction(req.user.id, nowBanned ? "ban" : "unban", req.params.id, req);
+      res.json({ ok: true, banned: nowBanned });
+    } catch (error) {
+      console.error(error); res.status(500).json({ error: "Error interno del servidor." });
+    }
+  });
+
+  /* ── Delete user ──────────────────────────── */
+
+  router.delete("/admin/users/:id", adminLimiter, requireUser, requireAdmin, async (req, res) => {
+    try {
+      if (String(req.params.id) === String(req.user.id)) return res.status(400).json({ error: "No puedes eliminar tu propia cuenta admin." });
+      await supabase.from("products").delete().eq("user_id", req.params.id);
+      const { error } = await supabaseAdmin.auth.admin.deleteUser(req.params.id);
+      if (error) return res.status(500).json({ error: "Error al eliminar usuario." });
+      await logAdminAction(req.user.id, "delete_user", req.params.id, req);
       res.json({ ok: true });
     } catch (error) {
       console.error(error); res.status(500).json({ error: "Error interno del servidor." });
