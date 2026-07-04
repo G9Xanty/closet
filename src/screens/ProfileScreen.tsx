@@ -133,6 +133,7 @@ export default function ProfileScreen() {
           <div className="profile-id">{user.dealer_id || user.username}</div>
           <div className="profile-phone">@{user.dealer_id || user.username}</div>
         </div>
+        <button className="profile-logout-btn" onClick={handleLogout} title="Cerrar sesión">⏻</button>
       </div>
 
       {showAvatarPicker && (

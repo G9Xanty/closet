@@ -776,6 +776,26 @@ button {
 
 .profile-heading { min-width: 0; }
 
+.profile-logout-btn {
+  background: none;
+  border: 1px solid rgba(255,68,68,0.3);
+  color: #ff6666;
+  font-size: 18px;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.profile-logout-btn:hover {
+  background: rgba(255,68,68,0.1);
+  border-color: #ff4444;
+}
+
 .profile-id {
   font-family: "Press Start 2P", monospace;
   color: #00ffff;
