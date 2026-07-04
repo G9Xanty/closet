@@ -125,15 +125,17 @@ export default function ProfileScreen() {
             className={`profile-avatar ${selectedAvatar}`}
             onClick={() => setShowAvatarPicker(p => !p)}
           />
-          <button className="avatar-change-btn" onClick={() => setShowAvatarPicker(p => !p)}>
-            {showAvatarPicker ? "▲ Cerrar" : "▼ Cambiar avatar"}
-          </button>
+          <div className="profile-avatar-actions">
+            <button className="avatar-change-btn" onClick={() => setShowAvatarPicker(p => !p)}>
+              {showAvatarPicker ? "▲ Cerrar" : "▼ Cambiar avatar"}
+            </button>
+            <button className="profile-logout-btn" onClick={handleLogout} title="Cerrar sesión">⏻</button>
+          </div>
         </div>
         <div className="profile-user-info">
           <div className="profile-id">{user.dealer_id || user.username}</div>
           <div className="profile-phone">@{user.dealer_id || user.username}</div>
         </div>
-        <button className="profile-logout-btn" onClick={handleLogout} title="Cerrar sesión">⏻</button>
       </div>
 
       {showAvatarPicker && (
