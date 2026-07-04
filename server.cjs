@@ -1398,57 +1398,7 @@ app.post("/api/admin/sales/:id/reject", adminLimiter, requireUser, requireAdmin,
   }
 });
 
-/* ── Admin: Report routes ─────────────────── */
-
-app.get("/api/admin/reports", adminLimiter, requireUser, requireAdmin, async (req, res) => {
-  try {
-    const status = String(req.query.status || "").trim();
-    let query = supabase
-      .from("reports")
-      .select("*, reporter:profiles!reports_reporter_id_fkey(id, username), reported:profiles!reports_reported_user_id_fkey(id, username)")
-      .order("created_at", { ascending: false })
-      .limit(100);
-    if (status) query = query.eq("status", status);
-    const { data: reports } = await query;
-    res.json({ reports: reports || [] });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post("/api/admin/reports/:id/action", adminLimiter, requireUser, requireAdmin, async (req, res) => {
-  try {
-    const { action } = req.body || {};
-    if (!action || !["dismissed", "action_taken"].includes(action)) return res.status(400).json({ error: "Accion invalida (dismissed/action_taken)." });
-
-    const { data: report } = await supabase.from("reports").select("*").eq("id", req.params.id).single();
-    if (!report) return res.status(404).json({ error: "Reporte no encontrado." });
-
-    await supabase.from("reports").update({
-      status: action === "action_taken" ? "action_taken" : "dismissed",
-      admin_id: req.user.id,
-      admin_note: req.body.note || "",
-      resolved_at: new Date().toISOString(),
-    }).eq("id", report.id);
-
-    if (action === "action_taken") {
-      await supabase.from("reputation_events").insert({
-        user_id: report.reported_user_id,
-        event_type: "report_confirmed",
-        points: -30,
-        reference_id: report.id,
-      }).catch(() => {});
-      await supabase.rpc("exec_sql", {
-        sql: `UPDATE profiles SET reputation_score = COALESCE(reputation_score,0) - 30, reports_count = COALESCE(reports_count,0) + 1 WHERE id = '${report.reported_user_id}'`
-      }).catch(() => {});
-    }
-
-    await logAdminAction(req.user.id, `report_${action}`, report.id, req);
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+/* ── Admin routes (paginated) moved to server/api/admin.cjs ──── */
 
 function slug(name) {
   return name.toLowerCase().replace(/[^a-z0-9-]/g, "-");

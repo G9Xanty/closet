@@ -249,14 +249,32 @@ module.exports = function createAdminRouter(deps) {
       if (!action || !["dismissed", "action_taken"].includes(action)) {
         return res.status(400).json({ error: "Accion invalida." });
       }
-      const { data } = await supabase
-        .from("reports")
-        .update({ status: action, admin_id: req.user.id, resolved_at: new Date().toISOString() })
-        .eq("id", req.params.id)
-        .select()
-        .single();
-      if (!data) return res.status(404).json({ error: "Reporte no encontrado." });
-      res.json({ ok: true, report: data });
+      const { data: report } = await supabase.from("reports").select("*").eq("id", req.params.id).single();
+      if (!report) return res.status(404).json({ error: "Reporte no encontrado." });
+
+      await supabase.from("reports").update({
+        status: action === "action_taken" ? "action_taken" : "dismissed",
+        admin_id: req.user.id,
+        admin_note: req.body.note || "",
+        resolved_at: new Date().toISOString()
+      }).eq("id", report.id);
+
+      if (action === "action_taken") {
+        await supabase.from("reputation_events").insert({
+          user_id: report.reported_user_id,
+          event_type: "report_confirmed",
+          points: -30,
+          reference_id: report.id
+        }).catch(() => {});
+        await supabase.rpc("exec_sql", {
+          sql: `UPDATE profiles SET reputation_score = COALESCE(reputation_score,0) - 30, reports_count = COALESCE(reports_count,0) + 1 WHERE id = '${report.reported_user_id}'`
+        }).catch(() => {});
+      }
+
+      if (typeof logAdminAction === "function") {
+        await logAdminAction(req.user.id, `report_${action}`, report.id, req);
+      }
+      res.json({ ok: true });
     } catch (error) {
       console.error(error); res.status(500).json({ error: "Error interno del servidor." });
     }
