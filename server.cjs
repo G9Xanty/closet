@@ -31,21 +31,8 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 function createSafeClient(url, key) {
   if (!url || !key) {
-    const errMsg = "Supabase no configurado. Configura SUPABASE_URL y SUPABASE_ANON_KEY.";
-    const errResult = () => Promise.resolve({ data: null, error: new Error(errMsg) });
-    const stubErr = () => ({ error: new Error(errMsg) });
-    const authStub = { getUser: errResult, signOut: () => Promise.resolve(), signUp: errResult, signInWithPassword: errResult, admin: { getUserById: errResult, listUsers: errResult, updateUserById: errResult } };
-    const queryChain = new Proxy({}, { get: () => () => queryChain });
-    queryChain.then = undefined;
-    const selectProxy = new Proxy(() => errResult(), { get: (t, prop) => prop === "then" ? undefined : () => selectProxy });
-    const fromStub = () => queryChain;
-    queryChain.select = () => selectProxy;
-    queryChain.insert = () => selectProxy;
-    queryChain.update = () => selectProxy;
-    queryChain.delete = () => selectProxy;
-    queryChain.single = () => selectProxy;
-    const storageStub = { from: () => ({ upload: stubErr, getPublicUrl: () => ({ data: { publicUrl: "" } }) }), createBucket: stubErr };
-    return { auth: authStub, from: fromStub, storage: storageStub, rpc: stubErr };
+    if (!url) url = "https://supabase.notconfigured.local";
+    if (!key) key = "missing-key";
   }
   return createClient(url, key);
 }
