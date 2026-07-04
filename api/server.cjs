@@ -175,7 +175,7 @@ async function deleteStorageFiles(paths) {
   const unique = [...new Set(paths.filter(Boolean))];
   if (unique.length === 0) return;
   for (const p of unique) {
-    await supabase.storage.from("product-images").remove([p]).catch(() => {});
+    await supabaseAdmin.storage.from("product-images").remove([p]).catch(() => {});
   }
 }
 
@@ -898,13 +898,13 @@ app.post("/api/uploads", requireUser, uploadLimiter, upload.single("image"), asy
     const cleanName = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_");
     const fileName = `user-${req.user.id}-${Date.now()}-${crypto.randomBytes(4).toString("hex")}${ext}`;
 
-    const { error } = await supabase.storage
+    const { error } = await supabaseAdmin.storage
       .from("product-images")
       .upload(fileName, req.file.buffer, { contentType: req.file.mimetype, upsert: false });
 
     if (error) return res.status(500).json({ error: "No se pudo subir imagen: " + error.message });
 
-    const { data: { publicUrl } } = supabase.storage.from("product-images").getPublicUrl(fileName);
+    const { data: { publicUrl } } = supabaseAdmin.storage.from("product-images").getPublicUrl(fileName);
 
     res.json({ imageUrl: publicUrl, image_url: publicUrl, storage_path: fileName });
   } catch (error) {
@@ -929,7 +929,7 @@ app.post("/api/uploads/multiple", requireUser, uploadLimiter, upload.array("imag
       const ext = path.extname(file.originalname) || ".jpg";
       const fileName = `user-${req.user.id}-${Date.now()}-${crypto.randomBytes(4).toString("hex")}${ext}`;
 
-      const { error } = await supabase.storage
+      const { error } = await supabaseAdmin.storage
         .from("product-images")
         .upload(fileName, file.buffer, { contentType: file.mimetype, upsert: false });
 
@@ -938,7 +938,7 @@ app.post("/api/uploads/multiple", requireUser, uploadLimiter, upload.array("imag
         continue;
       }
 
-      const { data: { publicUrl } } = supabase.storage.from("product-images").getPublicUrl(fileName);
+      const { data: { publicUrl } } = supabaseAdmin.storage.from("product-images").getPublicUrl(fileName);
       results.push({ imageUrl: publicUrl, image_url: publicUrl, storage_path: fileName });
     }
 
@@ -1342,7 +1342,7 @@ function slug(name) {
 
 async function initDb() {
   try {
-    await supabase.storage.createBucket("product-images", { public: true });
+    await supabaseAdmin.storage.createBucket("product-images", { public: true });
     console.log("Bucket product-images creado/verificado.");
   } catch {
     console.log("Bucket product-images ya existe o no se pudo crear. Verificar en Supabase dashboard.");
