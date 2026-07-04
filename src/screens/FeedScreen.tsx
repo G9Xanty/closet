@@ -213,7 +213,7 @@ export default function FeedScreen() {
         <div className="dealer-card" style={{ cursor: "pointer" }} onClick={() => goTo("profile")}>
           <div className={`dealer-avatar ${user?.avatar || "avatar-1"}`} />
           <div className="dealer-copy">
-            <div className="feed-title">{user?.username || user?.dealer_id || "Dealer#001"}</div>
+            <div className="feed-title">{user?.username || user?.dealer_id || "Mi tienda"}</div>
             <div className="dealer-subtitle">Bienvenido a Closet Elander</div>
           </div>
         </div>

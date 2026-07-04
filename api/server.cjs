@@ -618,6 +618,38 @@ app.post("/api/auth/register/verify", async (req, res) => {
   }
 });
 
+app.post("/api/auth/sync", requireUser, async (req, res) => {
+  try {
+    const user = req.user;
+    const meta = user.user_metadata || {};
+    const isAdmin = user.email === ADMIN_EMAIL;
+    if (!meta.dealer_id) {
+      const { data: allUsers } = await supabaseAdmin.auth.admin.listUsers();
+      const dealerNumber = (allUsers.users.length || 0);
+      const dealerId = `Dealer#${String(dealerNumber).padStart(3, "0")}`;
+      const { data: updated } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
+        user_metadata: { ...meta, dealer_id: dealerId, username: dealerId, is_admin: isAdmin, banned: false }
+      });
+      await supabase.from("profiles").upsert({
+        id: user.id,
+        username: dealerId,
+        avatar: meta.avatar || "avatar-1",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }).catch(() => {});
+      return res.json({ user: publicUser(updated.user) });
+    } else if (meta.is_admin !== isAdmin) {
+      const { data: updated } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
+        user_metadata: { ...meta, is_admin: isAdmin }
+      });
+      return res.json({ user: publicUser(updated.user) });
+    }
+    res.json({ user: publicUser(user) });
+  } catch (error) {
+    console.error(error); res.status(500).json({ error: "Error al sincronizar perfil." });
+  }
+});
+
 app.post("/api/auth/register", async (req, res) => {
   res.status(410).json({ error: "Usa /api/auth/register/start y luego /api/auth/register/verify." });
 });

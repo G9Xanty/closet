@@ -164,6 +164,15 @@ export function useAuth() {
       await supabase.auth.signOut();
       throw new Error("EMAIL_NOT_CONFIRMED");
     }
+    try {
+      const token = data.session?.access_token;
+      if (token) {
+        await fetch(`/api/auth/sync`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+      }
+    } catch {} // sync best-effort
   }, []);
 
   const signOut = useCallback(async () => {
