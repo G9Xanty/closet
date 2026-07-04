@@ -43,6 +43,10 @@ const supabaseAdmin = createSafeClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 const ADMIN_EMAIL = normalizeEmail(process.env.ADMIN_EMAIL || "admin@closet.local");
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 
+console.log("[BACKEND] SUPABASE_URL:", SUPABASE_URL);
+console.log("[BACKEND] ANON_KEY set:", !!SUPABASE_ANON_KEY);
+console.log("[BACKEND] SERVICE_KEY set:", !!SUPABASE_SERVICE_KEY);
+
 /* ── Rate Limiters ────────────────────────────────── */
 
 const authLimiter = rateLimit({
@@ -448,9 +452,31 @@ function getBearerToken(req) {
 async function requireUser(req, res, next) {
   try {
     const token = getBearerToken(req);
-    if (!token || token.length < 20) return res.status(401).json({ error: "No autenticado." });
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) {
+    if (!token || token.length < 20) {
+      console.warn("[AUTH] Token ausente o muy corto");
+      return res.status(401).json({ error: "No autenticado." });
+    }
+    let user = null;
+    let err = null;
+    try {
+      const result = await supabase.auth.getUser(token);
+      user = result.data?.user;
+      err = result.error;
+    } catch (e) {
+      err = e;
+    }
+    if (!user && err) {
+      console.warn("[AUTH] getUser con anon key fallo, intentando con service role:", err?.message || err);
+      try {
+        const result = await supabaseAdmin.auth.getUser(token);
+        user = result.data?.user;
+        err = result.error;
+      } catch (e2) {
+        err = e2;
+      }
+    }
+    if (err) console.warn("[AUTH] getUser error (final):", err?.message || err);
+    if (!user) {
       res.clearCookie("closet_token");
       return res.status(401).json({ error: "Sesion invalida." });
     }
@@ -458,7 +484,8 @@ async function requireUser(req, res, next) {
     if (meta.banned) return res.status(403).json({ error: "Tu cuenta esta baneada." });
     req.user = user;
     next();
-  } catch {
+  } catch (e) {
+    console.error("[AUTH] requireUser catch:", e);
     res.clearCookie("closet_token");
     res.status(401).json({ error: "Sesion invalida." });
   }

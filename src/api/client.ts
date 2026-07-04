@@ -5,9 +5,12 @@ const API_BASE = window.location.origin;
 
 export async function api(path: string, options?: RequestInit) {
   const isFormData = options?.body instanceof FormData;
-  console.log("[API REQUEST]", path, options?.method || "GET");
+  const method = options?.method || "GET";
+  console.log("[API REQUEST]", path, method);
 
-  const token = (await supabase.auth.getSession().then(s => s.data.session?.access_token).catch(() => undefined)) || "";
+  const session = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+  const token = session.data.session?.access_token || "";
+  if (!token && method !== "GET") console.warn("[API] No hay token para", method, path);
 
   const res = await fetch(`${API_BASE}${path}`, {
     credentials: "include",
