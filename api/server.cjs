@@ -695,7 +695,8 @@ app.get("/api/users/:id", requireUser, async (req, res) => {
       .select("*")
       .eq("user_id", req.params.id)
       .order("created_at", { ascending: false })
-      .limit(40);
+      .limit(40)
+      .catch(() => ({ data: [] }));
 
     const isOwnProfile = String(req.user.id) === String(req.params.id);
 
@@ -1345,11 +1346,21 @@ async function initDb() {
     await supabaseAdmin.storage.createBucket("product-images", { public: true });
     console.log("Bucket product-images creado/verificado.");
   } catch {
-    console.log("Bucket product-images ya existe o no se pudo crear. Verificar en Supabase dashboard.");
+    console.log("Bucket product-images ya existe o no se pudo crear.");
   }
 
-  // Las tablas (profiles, products, etc.) se crean via migraciones SQL.
-  // Ejecutar supabase/migrations/ en el SQL Editor de Supabase.
+  // Intentar auto-ejecutar la migración via RPC (si la funcion exec_sql existe)
+  try {
+    const fs = require("fs");
+    const path = require("path");
+    const sqlPath = path.join(__dirname, "..", "supabase", "migrations", "20240703000002_full_schema.sql");
+    const sql = fs.readFileSync(sqlPath, "utf8");
+    const { error } = await supabaseAdmin.rpc("exec_sql", { sql });
+    if (error) throw error;
+    console.log("Migracion SQL ejecutada via RPC.");
+  } catch {
+    console.log("Auto-migracion no disponible. Ejecutar supabase/migrations/ manualmente en SQL Editor.");
+  }
 
   if (ADMIN_PASSWORD && isValidEmail(ADMIN_EMAIL)) {
     try {

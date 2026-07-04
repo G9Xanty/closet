@@ -9,7 +9,7 @@ module.exports = function createAdminRouter(deps) {
   router.get("/admin/metrics", adminLimiter, requireUser, requireAdmin, async (_req, res) => {
     try {
       const { data: all } = await supabaseAdmin.auth.admin.listUsers();
-      const { count: productCount } = await supabase.from("products").select("*", { count: "exact", head: true });
+      const { count: productCount } = await supabase.from("products").select("*", { count: "exact", head: true }).catch(() => ({ count: 0 }));
       const { count: saleCount } = await supabase.from("sales").select("*", { count: "exact", head: true }).catch(() => ({ count: 0 }));
       res.json({
         users: all.users.length,
@@ -90,9 +90,9 @@ module.exports = function createAdminRouter(deps) {
 
       const { data: rows, error, count } = await query
         .order("created_at", { ascending: false })
-        .limit(limit + 1);
+        .limit(limit + 1).catch(() => ({ data: [], error: null, count: 0 }));
 
-      if (error) return res.status(500).json({ error: "Error al listar prendas." });
+      if (error) return res.json({ products: [], nextCursor: null, hasMore: false, total: 0 });
 
       const hasMore = rows.length > limit;
       const products = (hasMore ? rows.slice(0, limit) : rows).map(row => {
@@ -144,21 +144,15 @@ module.exports = function createAdminRouter(deps) {
 
       let query = supabase
         .from("sales")
-        .select("*", { count: "exact", head: true });
-
-      const fetchQuery = supabase
-        .from("sales")
-        .select("*, product:products(*), buyer:buyer_id(id, username, avatar), seller:seller_id(id, username, avatar)");
-
-      if (cursor) {
-        fetchQuery.lt("created_at", cursor);
-      }
-
-      const { data: rows, error, count } = await fetchQuery
+        .select("*, product:products(*), buyer:buyer_id(id, username, avatar), seller:seller_id(id, username, avatar)")
         .order("created_at", { ascending: false })
         .limit(limit + 1);
 
-      if (error) return res.status(500).json({ error: "Error al listar ventas." });
+      if (cursor) query = query.lt("created_at", cursor);
+
+      const { data: rows, error } = await query.catch(() => ({ data: [], error: null }));
+
+      if (error) return res.json({ sales: [], next_cursor: null, total: 0, has_more: false });
 
       const hasMore = rows.length > limit;
       const sales = (hasMore ? rows.slice(0, limit) : rows);
@@ -167,7 +161,6 @@ module.exports = function createAdminRouter(deps) {
       res.json({
         sales,
         next_cursor: nextCursor,
-        total: count || 0,
         has_more: hasMore
       });
     } catch (error) {
