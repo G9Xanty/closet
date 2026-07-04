@@ -3,12 +3,6 @@
   "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist",
   "installCommand": "npm install",
-  "builds": [
-    {
-      "src": "api/index.cjs",
-      "use": "@vercel/node"
-    }
-  ],
   "functions": {
     "api/index.cjs": {
       "memory": 512,
@@ -16,7 +10,7 @@
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.cjs" },
+    { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

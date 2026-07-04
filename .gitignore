@@ -6,3 +6,6 @@ uploads/*
 !uploads/.gitkeep
 dist/
 *.log
+
+.vercel
+.env*
