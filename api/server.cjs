@@ -1371,6 +1371,107 @@ app.get("/api/sales/bought", requireUser, async (req, res) => {
   }
 });
 
+/* ── Sale request routes ────────────────────── */
+
+app.post("/api/sale-requests", requireUser, async (req, res) => {
+  try {
+    const { product_id } = req.body || {};
+    if (!product_id) return res.status(400).json({ error: "Se requiere product_id." });
+
+    const { data: product } = await supabase.from("products").select("*").eq("id", product_id).single();
+    if (!product) return res.status(404).json({ error: "Prenda no encontrada." });
+    if (product.user_id === req.user.id) return res.status(400).json({ error: "No puedes solicitar tu propia prenda." });
+    if (product.status !== "disponible" && product.status !== "available") return res.status(400).json({ error: "Prenda no disponible." });
+
+    const { data: existing } = await supabase
+      .from("sale_requests")
+      .select("id, status")
+      .eq("product_id", product_id)
+      .eq("buyer_id", req.user.id)
+      .neq("status", "cancelled")
+      .neq("status", "rejected")
+      .single();
+    if (existing) return res.status(400).json({ error: "Ya solicitaste esta prenda." });
+
+    const { data: request, error } = await supabaseAdmin
+      .from("sale_requests")
+      .insert({ product_id, buyer_id: req.user.id, seller_id: product.user_id })
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: "Error al crear solicitud." });
+
+    await supabaseAdmin.from("products").update({ status: "reserved" }).eq("id", product_id);
+
+    res.json({ ok: true, request });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/sale-requests/mine", requireUser, async (req, res) => {
+  try {
+    const { data: asBuyer } = await supabase
+      .from("sale_requests")
+      .select("*, product:products(*)")
+      .eq("buyer_id", req.user.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    const { data: asSeller } = await supabase
+      .from("sale_requests")
+      .select("*, product:products(*), buyer:buyer_id(id, username, avatar)")
+      .eq("seller_id", req.user.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    res.json({ asBuyer: asBuyer || [], asSeller: asSeller || [] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch("/api/sale-requests/:id", requireUser, async (req, res) => {
+  try {
+    const { status } = req.body || {};
+    if (!status || !["accepted", "rejected", "cancelled", "completed"].includes(status)) {
+      return res.status(400).json({ error: "Estado invalido." });
+    }
+
+    const { data: sr } = await supabase.from("sale_requests").select("*").eq("id", req.params.id).single();
+    if (!sr) return res.status(404).json({ error: "Solicitud no encontrada." });
+
+    const isBuyer = sr.buyer_id === req.user.id;
+    const isSeller = sr.seller_id === req.user.id;
+    if (!isBuyer && !isSeller) return res.status(403).json({ error: "No tienes permiso." });
+
+    if (isBuyer && !["cancelled"].includes(status)) return res.status(403).json({ error: "Solo puedes cancelar." });
+    if (isSeller && !["accepted", "rejected"].includes(status)) return res.status(403).json({ error: "Solo puedes aceptar o rechazar." });
+
+    if (sr.status !== "requested") return res.status(400).json({ error: "Solo se pueden modificar solicitudes pendientes." });
+
+    const { data, error } = await supabaseAdmin
+      .from("sale_requests")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("id", req.params.id)
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: "Error al actualizar." });
+
+    if (status === "rejected" || status === "cancelled") {
+      await supabaseAdmin.from("products").update({ status: "disponible" }).eq("id", sr.product_id);
+    }
+    if (status === "completed") {
+      await supabaseAdmin.from("products").update({ status: "sold" }).eq("id", sr.product_id);
+    }
+
+    res.json({ ok: true, request: data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /* ── Report routes ─────────────────────────── */
 
 app.post("/api/reports", requireUser, async (req, res) => {

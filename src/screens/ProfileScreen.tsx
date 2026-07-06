@@ -214,6 +214,7 @@ export default function ProfileScreen() {
             <div className="section-title">Acciones</div>
             <button className="small-btn" onClick={() => goTo("feed")}>Ir al feed</button>
             <button className="small-btn" onClick={() => goTo("upload")}>Vender prenda</button>
+            <button className="small-btn" onClick={() => goTo("requests")}>Mis solicitudes</button>
           </div>
           <div className="profile-section">
             <div className="section-title">Cuenta</div>

@@ -6,13 +6,6 @@ function getProductImages(p: any): string[] {
   return p?.images?.filter(Boolean) || [p?.image_url, p?.image_url_2, p?.image_url_3, p?.image_url_4, p?.image].filter(Boolean) || [];
 }
 function formatPrice(v: number) { return "₡" + Number(v || 0).toLocaleString("es-CR"); }
-function normalizePhone(raw: string): string {
-  const digits = raw.replace(/\D/g, "");
-  if (digits.length === 8) return "506" + digits;
-  if (digits.length === 11 && digits.startsWith("506")) return digits;
-  if (digits.length > 8 && digits.slice(-8).length === 8) return "506" + digits.slice(-8);
-  return digits;
-}
 
 const CONDITION_LABELS: Record<string, string> = {
   new: "Nuevo",
@@ -52,31 +45,14 @@ export default function DetailScreen() {
     setRequesting(true);
     setStatusMsg("");
     try {
-      await api("/api/sales", {
+      await api("/api/sale-requests", {
         method: "POST",
-        body: JSON.stringify({ product_id: p.id, type: "internal" }),
+        body: JSON.stringify({ product_id: p.id }),
       });
-      const rawPhone = p.seller_phone || "";
-      const phone = normalizePhone(rawPhone);
-      if (!phone || phone.length < 10) {
-        setStatusMsg("Este vendedor aún no tiene un número disponible.");
-        setRequesting(false);
-        return;
-      }
-      const msg = [
-        "Hola.",
-        "",
-        "Vi tu publicación en Closet y estoy interesado en:",
-        "",
-        p.title || p.name,
-        "Precio: " + formatPrice(p.price),
-        "",
-        "¿Sigue disponible?",
-      ].join("\n");
-      window.open("https://wa.me/" + phone + "?text=" + encodeURIComponent(msg), "_blank");
-      setRequesting(false);
+      setStatusMsg("Solicitud enviada al vendedor");
     } catch (err: any) {
       setStatusMsg(err.message || "Error al solicitar");
+    } finally {
       setRequesting(false);
     }
   }
@@ -123,7 +99,7 @@ export default function DetailScreen() {
       <div className="detail-actions">
         {!isOwn && isAvailable && (
           <button className="small-btn" disabled={requesting} onClick={handleBuyRequest}>
-            {requesting ? "Creando solicitud..." : "Quiero comprar"}
+            {requesting ? "Enviando..." : "Me interesa"}
           </button>
         )}
 

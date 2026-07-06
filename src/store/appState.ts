@@ -9,7 +9,8 @@ export type Screen =
   | "publicProfile"
   | "sellerProfile"
   | "settings"
-  | "admin";
+  | "admin"
+  | "requests";
 
 export interface Product {
   id: number;
@@ -52,6 +53,18 @@ export interface Sale {
   product?: Product;
   buyer?: { id: string; username: string; avatar?: string };
   seller?: { id: string; username: string; avatar?: string };
+}
+
+export interface SaleRequest {
+  id: string;
+  product_id: number;
+  buyer_id: string;
+  seller_id: string;
+  status: "requested" | "accepted" | "rejected" | "cancelled" | "completed";
+  created_at: string;
+  updated_at: string;
+  product?: Product;
+  buyer?: { id: string; username: string; avatar?: string };
 }
 
 export interface Report {

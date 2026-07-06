@@ -152,3 +152,20 @@ CREATE TABLE IF NOT EXISTS admin_audit_log (
 );
 CREATE INDEX IF NOT EXISTS idx_admin_audit_admin ON admin_audit_log (admin_id);
 CREATE INDEX IF NOT EXISTS idx_admin_audit_created ON admin_audit_log (created_at DESC);
+
+-- 7. Sale requests (interest/intent phase, pre-chat)
+CREATE TABLE IF NOT EXISTS sale_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id BIGINT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  buyer_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  seller_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'requested'
+    CHECK (status IN ('requested','accepted','rejected','cancelled','completed')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_sale_requests_buyer ON sale_requests (buyer_id);
+CREATE INDEX IF NOT EXISTS idx_sale_requests_seller ON sale_requests (seller_id);
+CREATE INDEX IF NOT EXISTS idx_sale_requests_product ON sale_requests (product_id);
+CREATE INDEX IF NOT EXISTS idx_sale_requests_status ON sale_requests (status);
+ALTER TABLE sale_requests ENABLE ROW LEVEL SECURITY;
