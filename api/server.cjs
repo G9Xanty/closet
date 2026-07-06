@@ -1383,14 +1383,14 @@ app.post("/api/sale-requests", requireUser, async (req, res) => {
     if (product.user_id === req.user.id) return res.status(400).json({ error: "No puedes solicitar tu propia prenda." });
     if (product.status !== "disponible" && product.status !== "available") return res.status(400).json({ error: "Prenda no disponible." });
 
-    const { data: existing } = await supabase
+    const { data: existing } = await supabaseAdmin
       .from("sale_requests")
       .select("id, status")
       .eq("product_id", product_id)
       .eq("buyer_id", req.user.id)
       .neq("status", "cancelled")
       .neq("status", "rejected")
-      .single();
+      .maybeSingle();
     if (existing) return res.status(400).json({ error: "Ya solicitaste esta prenda." });
 
     const { data: request, error } = await supabaseAdmin
@@ -1411,16 +1411,16 @@ app.post("/api/sale-requests", requireUser, async (req, res) => {
 
 app.get("/api/sale-requests/mine", requireUser, async (req, res) => {
   try {
-    const { data: asBuyer } = await supabase
+    const { data: asBuyer } = await supabaseAdmin
       .from("sale_requests")
       .select("*, product:products(*)")
       .eq("buyer_id", req.user.id)
       .order("created_at", { ascending: false })
       .limit(50);
 
-    const { data: asSeller } = await supabase
+    const { data: asSeller } = await supabaseAdmin
       .from("sale_requests")
-      .select("*, product:products(*), buyer:buyer_id(id, username, avatar)")
+      .select("*, product:products(*)")
       .eq("seller_id", req.user.id)
       .order("created_at", { ascending: false })
       .limit(50);
@@ -1438,7 +1438,7 @@ app.patch("/api/sale-requests/:id", requireUser, async (req, res) => {
       return res.status(400).json({ error: "Estado invalido." });
     }
 
-    const { data: sr } = await supabase.from("sale_requests").select("*").eq("id", req.params.id).single();
+    const { data: sr } = await supabaseAdmin.from("sale_requests").select("*").eq("id", req.params.id).single();
     if (!sr) return res.status(404).json({ error: "Solicitud no encontrada." });
 
     const isBuyer = sr.buyer_id === req.user.id;
