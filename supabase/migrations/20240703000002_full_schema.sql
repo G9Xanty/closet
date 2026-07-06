@@ -59,6 +59,17 @@ CREATE INDEX IF NOT EXISTS idx_products_created_at ON products (created_at DESC)
 CREATE INDEX IF NOT EXISTS idx_products_category ON products (category);
 CREATE INDEX IF NOT EXISTS idx_products_status ON products (status);
 CREATE INDEX IF NOT EXISTS idx_products_user_id ON products (user_id);
+
+-- Sync schema for existing tables (idempotent: safe to re-run)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS brand TEXT DEFAULT '';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS condition TEXT DEFAULT 'good';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS images JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS storage_paths JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS show_phone BOOLEAN DEFAULT false;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url_2 TEXT DEFAULT '';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url_3 TEXT DEFAULT '';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url_4 TEXT DEFAULT '';
+
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "products_select_public" ON products;
 CREATE POLICY "products_select_public" ON products FOR SELECT USING (true);

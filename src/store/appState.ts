@@ -24,6 +24,7 @@ export interface Product {
   description: string;
   uber_flash_included: boolean;
   user_id: string;
+  seller_phone?: string;
   seller_reputation?: number;
   avatar?: string;
   image_url: string;

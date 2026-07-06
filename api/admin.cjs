@@ -177,21 +177,21 @@ module.exports = function createAdminRouter(deps) {
       if (!sale) return res.status(404).json({ error: "Venta no encontrada." });
       if (sale.status !== "requested" && sale.status !== "external") return res.status(400).json({ error: "Solo se pueden verificar ventas requested o external." });
 
-      await supabase.from("sales").update({
+      await supabaseAdmin.from("sales").update({
         status: "completed", verified: true, verified_by: req.user.id,
         verified_at: new Date().toISOString(), completed_at: new Date().toISOString()
       }).eq("id", sale.id);
 
-      await supabase.from("products").update({ status: "sold" }).eq("id", sale.product_id);
+      await supabaseAdmin.from("products").update({ status: "sold" }).eq("id", sale.product_id);
 
       const points = sale.type === "internal" ? 50 : 5;
-      await supabase.from("reputation_events").insert({
+      await supabaseAdmin.from("reputation_events").insert({
         user_id: sale.seller_id, sale_id: sale.id,
         event_type: sale.type === "internal" ? "sale_verified" : "sale_external", points
       }).catch(() => {});
 
       if (sale.type === "internal") {
-        await supabase.rpc("exec_sql", {
+        await supabaseAdmin.rpc("exec_sql", {
           sql: `UPDATE profiles SET reputation_score = COALESCE(reputation_score,0) + ${points}, sales_verified = COALESCE(sales_verified,0) + 1 WHERE id = '${sale.seller_id}'`
         }).catch(() => {});
       }
@@ -208,8 +208,8 @@ module.exports = function createAdminRouter(deps) {
       const { data: sale } = await supabase.from("sales").select("*").eq("id", req.params.id).single();
       if (!sale) return res.status(404).json({ error: "Venta no encontrada." });
 
-      await supabase.from("sales").update({ status: "rejected" }).eq("id", sale.id);
-      await supabase.from("products").update({ status: "disponible" }).eq("id", sale.product_id);
+      await supabaseAdmin.from("sales").update({ status: "rejected" }).eq("id", sale.id);
+      await supabaseAdmin.from("products").update({ status: "disponible" }).eq("id", sale.product_id);
       await logAdminAction(req.user.id, "reject_sale", sale.id, req);
       res.json({ ok: true });
     } catch (error) {
@@ -261,7 +261,7 @@ module.exports = function createAdminRouter(deps) {
       const { data: report } = await supabase.from("reports").select("*").eq("id", req.params.id).single();
       if (!report) return res.status(404).json({ error: "Reporte no encontrado." });
 
-      await supabase.from("reports").update({
+      await supabaseAdmin.from("reports").update({
         status: action === "action_taken" ? "action_taken" : "dismissed",
         admin_id: req.user.id,
         admin_note: req.body.note || "",
@@ -269,13 +269,13 @@ module.exports = function createAdminRouter(deps) {
       }).eq("id", report.id);
 
       if (action === "action_taken") {
-        await supabase.from("reputation_events").insert({
+        await supabaseAdmin.from("reputation_events").insert({
           user_id: report.reported_user_id,
           event_type: "report_confirmed",
           points: -30,
           reference_id: report.id
         }).catch(() => {});
-        await supabase.rpc("exec_sql", {
+        await supabaseAdmin.rpc("exec_sql", {
           sql: `UPDATE profiles SET reputation_score = COALESCE(reputation_score,0) - 30, reports_count = COALESCE(reports_count,0) + 1 WHERE id = '${report.reported_user_id}'`
         }).catch(() => {});
       }
@@ -301,9 +301,9 @@ module.exports = function createAdminRouter(deps) {
       await supabaseAdmin.auth.admin.updateUserById(req.params.id, { user_metadata: { ...meta, banned: nowBanned } });
       if (nowBanned) {
         await supabaseAdmin.auth.admin.signOut(req.params.id).catch(() => {});
-        await supabase.from("products").update({ status: "hidden" }).eq("user_id", req.params.id).catch(() => {});
+        await supabaseAdmin.from("products").update({ status: "hidden" }).eq("user_id", req.params.id).catch(() => {});
       } else {
-        await supabase.from("products").update({ status: "disponible" }).eq("user_id", req.params.id).catch(() => {});
+        await supabaseAdmin.from("products").update({ status: "disponible" }).eq("user_id", req.params.id).catch(() => {});
       }
       await logAdminAction(req.user.id, nowBanned ? "ban" : "unban", req.params.id, req);
       res.json({ ok: true, banned: nowBanned });
@@ -317,7 +317,7 @@ module.exports = function createAdminRouter(deps) {
   router.delete("/admin/users/:id", adminLimiter, requireUser, requireAdmin, async (req, res) => {
     try {
       if (String(req.params.id) === String(req.user.id)) return res.status(400).json({ error: "No puedes eliminar tu propia cuenta admin." });
-      await supabase.from("products").delete().eq("user_id", req.params.id);
+      await supabaseAdmin.from("products").delete().eq("user_id", req.params.id);
       const { error } = await supabaseAdmin.auth.admin.deleteUser(req.params.id);
       if (error) return res.status(500).json({ error: "Error al eliminar usuario." });
       await logAdminAction(req.user.id, "delete_user", req.params.id, req);

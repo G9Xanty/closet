@@ -365,7 +365,7 @@ function mergeProfileWithAuth(profileRow, meta, authEmail) {
 }
 
 async function getProfile(userId) {
-  const { data } = await supabase
+  const { data } = await supabaseAdmin
     .from("profiles")
     .select("*")
     .eq("id", userId)
@@ -376,7 +376,7 @@ async function getProfile(userId) {
 async function ensureProfile(userId) {
   const existing = await getProfile(userId);
   if (existing) return existing;
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("profiles")
     .insert({ id: userId })
     .select()
@@ -493,7 +493,7 @@ async function requireUser(req, res, next) {
 
 async function logAdminAction(adminId, action, targetId, req) {
   try {
-    await supabase.from("admin_audit_log").insert({
+    await supabaseAdmin.from("admin_audit_log").insert({
       admin_id: adminId,
       action,
       target_id: targetId,
@@ -597,13 +597,13 @@ app.post("/api/auth/register/verify", async (req, res) => {
         user_metadata: { ...meta, dealer_id: dealerId, username: dealerId, is_admin: isAdmin, banned: false }
       });
       data.user = updated.user;
-      await supabase.from("profiles").upsert({
+      await supabaseAdmin.from("profiles").upsert({
         id: data.user.id,
         username: dealerId,
         avatar: meta.avatar || "avatar-1",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      }).catch(() => {});
+      }).then(undefined, () => {});
     } else if (meta.is_admin !== isAdmin) {
       const { data: updated } = await supabaseAdmin.auth.admin.updateUserById(data.user.id, {
         user_metadata: { ...meta, is_admin: isAdmin }
@@ -630,13 +630,13 @@ app.post("/api/auth/sync", requireUser, async (req, res) => {
       const { data: updated } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
         user_metadata: { ...meta, dealer_id: dealerId, username: dealerId, is_admin: isAdmin, banned: false }
       });
-      await supabase.from("profiles").upsert({
+      await supabaseAdmin.from("profiles").upsert({
         id: user.id,
         username: dealerId,
         avatar: meta.avatar || "avatar-1",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      }).catch(() => {});
+      }).then(undefined, () => {});
       return res.json({ user: publicUser(updated.user) });
     } else if (meta.is_admin !== isAdmin) {
       const { data: updated } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
@@ -708,7 +708,7 @@ app.patch("/api/users/me", requireUser, async (req, res) => {
     });
     if (error) return res.status(500).json({ error: error.message });
 
-    await supabase.from("profiles").upsert({
+    await supabaseAdmin.from("profiles").upsert({
       id: req.user.id,
       username,
       avatar,
@@ -1173,13 +1173,13 @@ app.post("/api/products", requireUser, productLimiter, async (req, res) => {
     const rawStoragePaths = Array.isArray(body.storage_paths) ? body.storage_paths.filter(Boolean) : [];
     const storagePaths = rawStoragePaths.filter(p => String(p).startsWith(`user-${req.user.id}-`));
 
-    const profileRow = await getProfile(req.user.id);
+    const profileRow = await ensureProfile(req.user.id);
     const phoneVisible = profileRow?.phone_private === false && profileRow?.whatsapp_enabled === true;
     const sellerPhone = phoneVisible
       ? normalizeWhatsappPhone(profileRow?.phone_number || meta.whatsapp_phone || "")
       : "";
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("products")
       .insert({
         title,
@@ -1248,7 +1248,7 @@ app.patch("/api/products/:id", requireUser, productLimiter, async (req, res) => 
     const oldPaths = extractStoragePaths(existing);
     const removedPaths = oldPaths.filter(p => !newStoragePaths.includes(p));
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("products")
       .update({
         title,
@@ -1294,7 +1294,7 @@ app.delete("/api/products/:id", requireUser, async (req, res) => {
     const paths = extractStoragePaths(existing);
     await deleteStorageFiles(paths);
 
-    await supabase.from("products").delete().eq("id", req.params.id);
+    await supabaseAdmin.from("products").delete().eq("id", req.params.id);
     res.json({ ok: true });
   } catch (error) {
     console.error(error); res.status(500).json({ error: "Error interno del servidor." });
@@ -1323,7 +1323,7 @@ app.post("/api/sales", requireUser, async (req, res) => {
     const buyerId = type === "internal" ? req.user.id : null;
     const saleStatus = type === "internal" ? "requested" : "external";
 
-    const { data: sale, error } = await supabase.from("sales").insert({
+    const { data: sale, error } = await supabaseAdmin.from("sales").insert({
       product_id,
       buyer_id: buyerId,
       seller_id: product.user_id,
@@ -1334,7 +1334,7 @@ app.post("/api/sales", requireUser, async (req, res) => {
     if (error) return res.status(500).json({ error: "Error al crear solicitud." });
 
     if (type === "internal") {
-      await supabase.from("products").update({ status: "reserved" }).eq("id", product_id);
+      await supabaseAdmin.from("products").update({ status: "reserved" }).eq("id", product_id);
     }
 
     res.json({ ok: true, sale });
@@ -1379,7 +1379,7 @@ app.post("/api/reports", requireUser, async (req, res) => {
     if (!reported_user_id || !reason) return res.status(400).json({ error: "Se requiere reported_user_id y reason." });
     if (reported_user_id === req.user.id) return res.status(400).json({ error: "No puedes reportarte a ti mismo." });
 
-    const { data, error } = await supabase.from("reports").insert({
+    const { data, error } = await supabaseAdmin.from("reports").insert({
       reporter_id: req.user.id,
       reported_user_id,
       product_id: product_id || null,
