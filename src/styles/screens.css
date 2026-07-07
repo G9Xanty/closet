@@ -397,8 +397,8 @@ button {
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 8px 0;
@@ -415,7 +415,7 @@ button {
   flex-direction: column;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 6px;
+  border-radius: 5px;
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
@@ -496,15 +496,15 @@ button {
 }
 
 .product-info {
-  padding: 8px 8px 8px;
+  padding: 6px 6px 6px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .product-name {
   font-family: "Press Start 2P", monospace;
-  font-size: 9px;
+  font-size: 8px;
   color: #ffffff;
   margin: 0;
   white-space: nowrap;
@@ -523,7 +523,7 @@ button {
 
 .product-price {
   font-family: "Press Start 2P", monospace;
-  font-size: 11px;
+  font-size: 10px;
   color: #ffd700;
   font-weight: bold;
   text-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
@@ -531,7 +531,7 @@ button {
 }
 
 .product-size {
-  font-size: 7px;
+  font-size: 6px;
   color: rgba(255, 255, 255, 0.3);
   font-family: "Press Start 2P", monospace;
   letter-spacing: 0.5px;
@@ -545,7 +545,7 @@ button {
 }
 
 .product-location {
-  font-size: 7px;
+  font-size: 6px;
   color: rgba(255, 255, 255, 0.3);
   font-family: "Press Start 2P", monospace;
   letter-spacing: 0.5px;
@@ -555,7 +555,7 @@ button {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 7px;
+  font-size: 6px;
   color: #ffd700;
   font-family: "Press Start 2P", monospace;
   letter-spacing: 0.5px;
@@ -563,10 +563,10 @@ button {
 
 .product-action-btn {
   width: 100%;
-  padding: 6px;
-  margin-top: 3px;
+  padding: 4px;
+  margin-top: 2px;
   font-family: "Press Start 2P", monospace;
-  font-size: 8px;
+  font-size: 7px;
   background: rgba(0, 255, 255, 0.1);
   border: 1px solid rgba(0, 255, 255, 0.15);
   border-radius: 3px;
