@@ -397,7 +397,7 @@ button {
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 16px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -716,8 +716,8 @@ button {
   font-family: "Press Start 2P", monospace;
   font-size: clamp(11px, 0.8vw, 13px);
   aspect-ratio: 1;
-  max-width: min(100%, 45vh);
-  max-height: 45vh;
+  max-width: min(100%, 65vh);
+  max-height: 65vh;
   justify-self: center;
 }
 
