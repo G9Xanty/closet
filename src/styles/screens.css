@@ -397,8 +397,8 @@ button {
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 8px 0;
@@ -496,15 +496,15 @@ button {
 }
 
 .product-info {
-  padding: 14px 14px 12px;
+  padding: 10px 10px 10px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .product-name {
   font-family: "Press Start 2P", monospace;
-  font-size: 13px;
+  font-size: 11px;
   color: #ffffff;
   margin: 0;
   white-space: nowrap;
@@ -523,7 +523,7 @@ button {
 
 .product-price {
   font-family: "Press Start 2P", monospace;
-  font-size: 15px;
+  font-size: 13px;
   color: #ffd700;
   font-weight: bold;
   text-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
@@ -531,7 +531,7 @@ button {
 }
 
 .product-size {
-  font-size: 10px;
+  font-size: 9px;
   color: rgba(255, 255, 255, 0.3);
   font-family: "Press Start 2P", monospace;
   letter-spacing: 0.5px;
@@ -541,11 +541,11 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .product-location {
-  font-size: 10px;
+  font-size: 8px;
   color: rgba(255, 255, 255, 0.3);
   font-family: "Press Start 2P", monospace;
   letter-spacing: 0.5px;
@@ -555,7 +555,7 @@ button {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 10px;
+  font-size: 8px;
   color: #ffd700;
   font-family: "Press Start 2P", monospace;
   letter-spacing: 0.5px;
@@ -563,10 +563,10 @@ button {
 
 .product-action-btn {
   width: 100%;
-  padding: 10px;
-  margin-top: 6px;
+  padding: 8px;
+  margin-top: 4px;
   font-family: "Press Start 2P", monospace;
-  font-size: 10px;
+  font-size: 9px;
   background: rgba(0, 255, 255, 0.1);
   border: 1px solid rgba(0, 255, 255, 0.15);
   border-radius: 4px;
@@ -1311,8 +1311,8 @@ button {
 
 @media (max-width: 768px) {
   .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
   }
 
   .category-row {
