@@ -10,7 +10,8 @@ export type Screen =
   | "sellerProfile"
   | "settings"
   | "admin"
-  | "requests";
+  | "requests"
+  | "chat";
 
 export interface Product {
   id: number;
@@ -27,6 +28,7 @@ export interface Product {
   user_id: string;
   seller_phone?: string;
   seller_reputation?: number;
+  seller_location?: string;
   avatar?: string;
   image_url: string;
   image_url_2?: string;
@@ -34,6 +36,15 @@ export interface Product {
   image_url_4?: string;
   image?: string;
   images?: string[];
+}
+
+export interface Message {
+  id: string;
+  sale_request_id: string;
+  sender_id: string;
+  content: string;
+  created_at: string;
+  read_at: string | null;
 }
 
 export interface Sale {

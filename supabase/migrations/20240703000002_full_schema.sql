@@ -169,3 +169,15 @@ CREATE INDEX IF NOT EXISTS idx_sale_requests_seller ON sale_requests (seller_id)
 CREATE INDEX IF NOT EXISTS idx_sale_requests_product ON sale_requests (product_id);
 CREATE INDEX IF NOT EXISTS idx_sale_requests_status ON sale_requests (status);
 ALTER TABLE sale_requests ENABLE ROW LEVEL SECURITY;
+
+-- 8. Messages (chat dentro de sale_requests aceptadas)
+CREATE TABLE IF NOT EXISTS messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sale_request_id UUID NOT NULL REFERENCES sale_requests(id) ON DELETE CASCADE,
+  sender_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  read_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_messages_sale_request ON messages (sale_request_id, created_at);
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;

@@ -91,7 +91,7 @@ async function main() {
   const payload = {
     name: "Test Product", price: 100, size: "M", brand: "Test",
     category: "otros", condition: "good",
-    description: "Testing sale_requests", images: ["https://via.placeholder.com/400"],
+    description: "Testing sale_requests", images: ["data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23cccccc' width='400' height='400'/%3E%3Ctext fill='%23666666' font-size='48' x='200' y='200' text-anchor='middle'%3ETEST%3C/text%3E%3C/svg%3E"],
   };
   for (const [name, store] of [["A", (v) => productA = v], ["B", (v) => productB = v], ["C", (v) => productC = v]]) {
     const r = await api("POST", "/api/products", sellerToken, payload);

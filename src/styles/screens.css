@@ -259,6 +259,7 @@ button {
 .dealer-copy { min-width: 0; }
 
 .reputation-badge {
+  font-family: "Press Start 2P", monospace;
   font-size: clamp(9px, 0.7vw, 11px);
   color: rgba(255, 255, 255, 0.4);
   letter-spacing: 0.5px;
@@ -396,11 +397,11 @@ button {
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 1px;
+  padding: 8px 0;
   min-height: 0;
   flex: 1;
   align-content: start;
@@ -410,148 +411,199 @@ button {
 }
 
 .product-card {
-  border: 1px solid rgba(0, 255, 255, 0.06);
-  background: rgba(0, 255, 255, 0.03);
-  padding: 3px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
   cursor: pointer;
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  transition: all 0.3s ease;
 }
 
 .product-card:hover {
-  background: rgba(0, 255, 255, 0.06);
-  border-color: rgba(0, 255, 255, 0.15);
+  transform: translateY(-4px);
+  border-color: rgba(0, 255, 255, 0.2);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
 
-.product-image {
-  height: 28px;
-  background: rgba(0, 255, 255, 0.05);
-  border: 1px solid rgba(0, 255, 255, 0.08);
-  border-radius: 3px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.product-image-container {
+  position: relative;
+  width: 100%;
+  padding-top: 100%;
+  background: rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.2);
-  flex-shrink: 0;
 }
 
-.product-image img {
+.product-image-container img {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  object-position: center;
-  background: #ededed;
-  display: block;
+  transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-image-container img {
+  transform: scale(1.02);
+}
+
+.product-image-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 48px;
+  color: rgba(255, 255, 255, 0.1);
+}
+
+.product-status-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  letter-spacing: 0.5px;
+}
+
+.product-status-badge.available {
+  background: rgba(0, 255, 136, 0.15);
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.product-status-badge.reserved {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.product-status-badge.sold {
+  background: rgba(255, 68, 68, 0.15);
+  color: #ff4444;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+}
+
+.product-info {
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .product-name {
   font-family: "Press Start 2P", monospace;
-  font-size: clamp(12px, 1vw, 15px);
-  line-height: 1.2;
-  font-weight: 400;
+  font-size: 13px;
   color: #ffffff;
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   letter-spacing: 0.5px;
 }
 
-.product-meta-line {
+.product-meta {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 2px;
-  min-width: 0;
-  font-family: "Press Start 2P", monospace;
-  font-size: clamp(10px, 0.8vw, 12px);
-  line-height: 1.2;
-  color: rgba(255, 255, 255, 0.3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  letter-spacing: 0.5px;
-}
-
-.product-status {
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-  padding: 1px 4px;
-  border: 1px solid rgba(0, 255, 136, 0.3);
-  background: rgba(0, 255, 136, 0.08);
-  color: #00ff88;
-  border-radius: 999px;
-  font-family: "Press Start 2P", monospace;
-  font-size: clamp(8px, 0.6vw, 11px);
-  font-weight: 400;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  box-sizing: border-box;
-  line-height: 1.2;
-  min-height: 10px;
-  letter-spacing: 0.5px;
-}
-
-.product-status.vendido {
-  border-color: rgba(255, 68, 68, 0.3);
-  background: rgba(255, 68, 68, 0.1);
-  color: #ff4444;
-}
-
-.product-status.reservado {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.03);
-  color: rgba(255, 255, 255, 0.4);
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .product-price {
   font-family: "Press Start 2P", monospace;
+  font-size: 15px;
   color: #ffd700;
-  font-size: clamp(13px, 1.1vw, 17px);
-  font-weight: 400;
-  white-space: nowrap;
+  font-weight: bold;
   text-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
   letter-spacing: 0.5px;
 }
 
-.product-footer {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 1px;
-  margin-top: auto;
-  min-width: 0;
-  width: 100%;
-}
-
-.no-image {
-  color: rgba(255, 255, 255, 0.15);
+.product-size {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.3);
   font-family: "Press Start 2P", monospace;
-  font-size: clamp(8px, 0.6vw, 11px);
-  font-weight: 400;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  padding: 0 1px;
+  letter-spacing: 0.5px;
 }
 
-.skeleton { pointer-events: none; }
-.skeleton-box {
+.product-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.product-location {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.3);
+  font-family: "Press Start 2P", monospace;
+  letter-spacing: 0.5px;
+}
+
+.product-reputation {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #ffd700;
+  font-family: "Press Start 2P", monospace;
+  letter-spacing: 0.5px;
+}
+
+.product-action-btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  background: rgba(0, 255, 255, 0.1);
+  border: 1px solid rgba(0, 255, 255, 0.15);
+  border-radius: 4px;
+  color: #00ffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+}
+
+.product-action-btn:hover {
+  background: rgba(0, 255, 255, 0.2);
+  border-color: rgba(0, 255, 255, 0.3);
+}
+
+.skeleton-card {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.skeleton-image {
+  width: 100%;
+  padding-top: 100%;
   background: linear-gradient(90deg, rgba(0, 255, 255, 0.03) 25%, rgba(0, 255, 255, 0.08) 50%, rgba(0, 255, 255, 0.03) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
-  height: 24px;
-  border-radius: 3px;
 }
+
+.skeleton-lines {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .skeleton-line {
   background: linear-gradient(90deg, rgba(0, 255, 255, 0.03) 25%, rgba(0, 255, 255, 0.08) 50%, rgba(0, 255, 255, 0.03) 75%);
   background-size: 200% 100%;
@@ -559,8 +611,10 @@ button {
   border-radius: 2px;
   height: 3px;
 }
-.skeleton-line-sm { width: 70%; margin-top: 1px; }
-.skeleton-line-xs { width: 45%; margin-top: 1px; height: 2px; }
+
+.skeleton-line-sm { width: 70%; }
+.skeleton-line-xs { width: 45%; height: 2px; }
+
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
@@ -606,32 +660,63 @@ button {
 .detail-view {
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  padding: 3px 4px;
-  gap: 3px;
   overflow-y: auto;
   overflow-x: hidden;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  padding: 12px;
+}
+
+.detail-layout {
+  display: grid;
+  grid-template-columns: 70px 1fr 320px;
+  gap: 16px;
+  height: 100%;
+  min-height: 0;
+}
+
+.detail-thumbnails {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+}
+
+.detail-thumbnail {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0.5;
+  border: 2px solid transparent;
+  transition: opacity 0.2s, border-color 0.2s;
+  background: #18181e;
+  box-sizing: border-box;
+}
+
+.detail-thumbnail.active {
+  opacity: 1;
+  border-color: var(--accent-red);
+}
+
+.detail-thumbnail:hover {
+  opacity: 0.8;
 }
 
 .detail-image {
-  width: 100%;
-  min-height: 40px;
-  max-height: 70px;
-  aspect-ratio: 4 / 3;
-  border: 1px solid rgba(0, 255, 255, 0.1);
-  background: rgba(0, 255, 255, 0.03);
-  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  background: rgba(0, 255, 255, 0.03);
+  border-radius: 8px;
+  overflow: hidden;
   color: rgba(255, 255, 255, 0.2);
   font-family: "Press Start 2P", monospace;
   font-size: clamp(11px, 0.8vw, 13px);
-  overflow: hidden;
+  min-height: 0;
 }
 
 .detail-image img {
@@ -642,27 +727,63 @@ button {
   background: #ededed;
 }
 
+.detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding: 0 4px;
+}
+
 .detail-name {
   font-family: "Press Start 2P", monospace;
   color: #ffffff;
-  font-size: clamp(12px, 1vw, 15px);
+  font-size: clamp(16px, 1.2vw, 20px);
   font-weight: 400;
   letter-spacing: 0.5px;
+  line-height: 1.3;
 }
 
 .detail-price {
   font-family: "Press Start 2P", monospace;
   color: #ffd700;
-  font-size: clamp(12px, 1vw, 15px);
+  font-size: clamp(18px, 1.4vw, 24px);
   font-weight: 400;
   text-shadow: 0 0 12px rgba(255, 215, 0, 0.15);
   letter-spacing: 0.5px;
 }
 
+.detail-status-badge {
+  display: inline-block;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(10px, 0.8vw, 11px);
+  padding: 4px 10px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.detail-status-badge.available {
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.12);
+  border: 1px solid rgba(0, 255, 136, 0.25);
+}
+
+.detail-status-badge.reserved {
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detail-status-badge.sold {
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.12);
+  border: 1px solid rgba(255, 68, 68, 0.25);
+}
+
 .detail-meta-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   width: 100%;
   max-width: 100%;
 }
@@ -670,21 +791,20 @@ button {
 .detail-pill {
   border: 1px solid rgba(0, 255, 255, 0.1);
   background: rgba(0, 255, 255, 0.03);
-  border-radius: 3px;
-  padding: 2px;
+  border-radius: 4px;
+  padding: 4px 8px;
   font-family: "Press Start 2P", monospace;
   font-size: clamp(10px, 0.8vw, 12px);
   font-weight: 400;
   color: rgba(255, 255, 255, 0.4);
-  text-align: center;
   letter-spacing: 0.5px;
 }
 
 .detail-copy {
   font-family: "Press Start 2P", monospace;
-  font-size: clamp(10px, 0.8vw, 12px);
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: clamp(11px, 0.8vw, 12px);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.5);
   width: 100%;
   max-width: 100%;
   word-wrap: break-word;
@@ -694,16 +814,99 @@ button {
 
 .detail-actions {
   display: flex;
-  gap: 3px;
-  margin-top: 2px;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
   width: 100%;
   max-width: 100%;
-  flex-wrap: wrap;
 }
 
-.detail-actions .small-btn {
-  flex: 1;
-  min-width: 40px;
+.detail-btn {
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(11px, 0.9vw, 12px);
+  padding: 12px 18px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  background: rgba(0, 255, 255, 0.08);
+  color: #00ffff;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  letter-spacing: 0.5px;
+  width: 100%;
+}
+
+.detail-btn.primary {
+  background: rgba(0, 255, 255, 0.12);
+  border-color: rgba(0, 255, 255, 0.3);
+}
+
+.detail-btn.primary:hover {
+  background: rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 16px rgba(0, 255, 255, 0.2);
+}
+
+.detail-btn.secondary {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.detail-btn.secondary:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.detail-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Responsive: tablet */
+@media (max-width: 1024px) {
+  .detail-layout {
+    grid-template-columns: 60px 1fr 260px;
+    gap: 12px;
+  }
+
+  .detail-thumbnails {
+    gap: 4px;
+  }
+
+  .detail-info {
+    gap: 10px;
+  }
+}
+
+/* Responsive: mobile */
+@media (max-width: 768px) {
+  .detail-view {
+    padding: 8px;
+  }
+
+  .detail-layout {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    height: auto;
+  }
+
+  .detail-thumbnails {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 6px;
+    padding: 4px 0;
+  }
+
+  .detail-thumbnail {
+    width: 50px;
+    min-width: 50px;
+    flex-shrink: 0;
+  }
+
+  .detail-image {
+    min-height: 260px;
+  }
 }
 
 .profile-view {
@@ -1092,27 +1295,8 @@ button {
     min-height: 14px;
   }
 
-  .product-card {
-    padding: 3px;
-    gap: 2px;
-  }
-
-  .product-image {
-    height: 22px;
-  }
-
   .product-name {
     font-size: clamp(11px, 0.8vw, 13px);
-  }
-
-  .product-meta-line {
-    font-size: clamp(8px, 0.6vw, 11px);
-  }
-
-  .product-status {
-    font-size: clamp(7px, 0.5vw, 10px);
-    padding: 1px 3px;
-    min-height: 8px;
   }
 
   .product-price {
@@ -1128,16 +1312,13 @@ button {
 
 @media (max-width: 768px) {
   .products-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
   }
 
   .category-row {
     overflow-x: auto;
     flex-wrap: nowrap;
-  }
-
-  .product-card {
-    min-height: 80px;
   }
 }
 
@@ -1275,4 +1456,142 @@ button {
 .bottom-nav-btn:disabled {
   opacity: 0.2;
   cursor: default;
+}
+
+/* ── Chat screen ── */
+
+.chat-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.chat-product-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-product-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.chat-product-name {
+  font-family: "Press Start 2P", monospace;
+  font-size: 11px;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.chat-product-price {
+  font-family: "Press Start 2P", monospace;
+  font-size: 9px;
+  color: #ffd700;
+  letter-spacing: 0.5px;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chat-loading,
+.chat-empty {
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+  padding: 20px 8px;
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+}
+
+.chat-bubble {
+  max-width: 80%;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.3px;
+}
+
+.chat-bubble.own {
+  align-self: flex-end;
+  background: rgba(0, 255, 255, 0.12);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.chat-bubble.other {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.chat-bubble-text {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.chat-bubble-time {
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.3);
+  margin-top: 4px;
+  text-align: right;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px;
+  border-top: 1px solid rgba(0, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.chat-input {
+  flex: 1;
+  font-size: clamp(10px, 0.8vw, 12px) !important;
+}
+
+.chat-actions {
+  padding: 6px 8px;
+  border-top: 1px solid rgba(0, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+.chat-action-buttons {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.chat-status {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+  letter-spacing: 0.5px;
 }

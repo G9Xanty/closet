@@ -90,6 +90,14 @@ export default function RequestsScreen() {
             {tab === "buyer" && sr.status === "requested" && (
               <button className="small-btn secondary" style={{ fontSize: 12 }} onClick={() => handleAction(sr.id, "cancelled")}>Cancelar</button>
             )}
+            {(sr.status === "accepted" || sr.status === "requested") && (
+              <button className="small-btn" style={{ fontSize: 12 }} onClick={() => {
+                if (sr.product) {
+                  setActiveProduct({ ...sr.product, _saleRequestId: sr.id } as any);
+                  goTo("chat");
+                }
+              }}>Chat</button>
+            )}
             <button className="small-btn secondary" style={{ fontSize: 12 }} onClick={() => {
               if (sr.product) {
                 setActiveProduct(sr.product as any);

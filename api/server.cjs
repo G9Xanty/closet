@@ -429,6 +429,7 @@ function publicProduct(row) {
     seller_dealer_id: "",
     seller_avatar: "",
     seller_reputation: row.seller_reputation || 0,
+    seller_location: row.seller_location || "",
     created_at: row.created_at
   };
 }
@@ -1067,6 +1068,7 @@ app.get("/api/products", apiLimiter, async (req, res) => {
           username,
           avatar,
           reputation_score,
+          location,
           phone_number,
           phone_private,
           whatsapp_enabled
@@ -1108,6 +1110,7 @@ app.get("/api/products", apiLimiter, async (req, res) => {
         seller_dealer_id: profile.username || "",
         seller_avatar: profile.avatar || "avatar-1",
         seller_reputation: profile.reputation_score || 0,
+        seller_location: profile.location || "",
         seller_phone: row.seller_phone || (visible ? (profile.phone_number || "") : "") || "",
       });
     });
@@ -1467,6 +1470,62 @@ app.patch("/api/sale-requests/:id", requireUser, async (req, res) => {
     }
 
     res.json({ ok: true, request: data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── Messages routes ────────────────────────── */
+
+app.get("/api/sale-requests/:id/messages", requireUser, async (req, res) => {
+  try {
+    const { data: sr } = await supabaseAdmin.from("sale_requests").select("buyer_id, seller_id").eq("id", req.params.id).single();
+    if (!sr) return res.status(404).json({ error: "Solicitud no encontrada." });
+    if (sr.buyer_id !== req.user.id && sr.seller_id !== req.user.id) return res.status(403).json({ error: "No tienes permiso." });
+
+    const { data: messages } = await supabaseAdmin
+      .from("messages")
+      .select("*")
+      .eq("sale_request_id", req.params.id)
+      .order("created_at", { ascending: true })
+      .limit(100);
+
+    res.json({ messages: messages || [] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/sale-requests/:id/messages", requireUser, async (req, res) => {
+  try {
+    const { content } = req.body || {};
+    if (!content || !content.trim()) return res.status(400).json({ error: "Mensaje vacio." });
+
+    const { data: sr } = await supabaseAdmin.from("sale_requests").select("buyer_id, seller_id, status").eq("id", req.params.id).single();
+    if (!sr) return res.status(404).json({ error: "Solicitud no encontrada." });
+    if (sr.buyer_id !== req.user.id && sr.seller_id !== req.user.id) return res.status(403).json({ error: "No tienes permiso." });
+
+    const { data: message, error } = await supabaseAdmin
+      .from("messages")
+      .insert({ sale_request_id: req.params.id, sender_id: req.user.id, content: content.trim() })
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: "Error al enviar mensaje." });
+    res.json({ ok: true, message });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch("/api/messages/:id/read", requireUser, async (req, res) => {
+  try {
+    const { data: msg } = await supabaseAdmin.from("messages").select("id, sender_id, sale_request_id").eq("id", req.params.id).single();
+    if (!msg) return res.status(404).json({ error: "Mensaje no encontrado." });
+    if (msg.sender_id === req.user.id) return res.status(400).json({ error: "No puedes marcar tus propios mensajes." });
+
+    await supabaseAdmin.from("messages").update({ read_at: new Date().toISOString() }).eq("id", req.params.id);
+    res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -1,63 +1,21 @@
-import { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useAppContext } from "../store/AppProvider";
 import { api } from "../api/client";
 import type { Product } from "../store/appState";
-
-const STATUS_LABELS: Record<string, string> = {
-  disponible: "Disponible",
-  available: "Disponible",
-  reserved: "Reservado",
-  reservado: "Reservado",
-  sold: "Vendido",
-  vendido: "Vendido",
-};
-
-function getProductImage(p: Product) { return p.image_url || p.image || ""; }
-function getStatusClass(s: string) {
-  const v = String(s || "").toLowerCase();
-  if (v === "sold" || v === "vendido") return "vendido";
-  if (v === "reserved" || v === "reservado") return "reservado";
-  return "disponible";
-}
-function getStatusLabel(s: string) {
-  return STATUS_LABELS[String(s || "").toLowerCase()] || "Disponible";
-}
-function formatPrice(v: number) { return "₡" + Number(v || 0).toLocaleString("es-CR"); }
-
+import ProductCard from "../components/ProductCard";
 
 const CATEGORIES = ["all", "camisetas", "hoodies", "pantalones", "accesorios", "otros"];
-
-const ProductCard = memo(function ProductCard({ product, onOpen }: { product: Product; onOpen: (p: Product) => void }) {
-  const img = getProductImage(product);
-  const rep = product.seller_reputation || 0;
-  const repClass = rep > 0 ? "positive" : rep < 0 ? "negative" : "";
-  return (
-    <div className="product-card" onClick={() => onOpen(product)}>
-      <div className="product-image">
-        {img ? <img src={img} alt="" loading="lazy" /> : <span className="no-image">SIN IMAGEN</span>}
-      </div>
-      <div className="product-name">{product.name}</div>
-      <div className="product-meta-line">
-        {product.brand ? product.brand + " · " : ""}Talla {product.size || "N/D"}
-        <span className={`reputation-badge ${repClass}`} style={{ marginLeft: 4 }}>{rep > 0 ? `★${rep}` : rep < 0 ? `☆${rep}` : ""}</span>
-      </div>
-      <div className={`product-status ${getStatusClass(product.status)}`}>{getStatusLabel(product.status)}</div>
-      <div className="product-footer">
-        <div className="product-price">{formatPrice(product.price)}</div>
-      </div>
-    </div>
-  );
-});
 
 function LoadingSkeleton() {
   return (
     <div className="products-grid" style={{ flex: 1 }}>
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="product-card skeleton">
-          <div className="product-image skeleton-box" />
-          <div className="skeleton-line skeleton-line-sm" />
-          <div className="skeleton-line skeleton-line-xs" />
-          <div className="skeleton-line skeleton-line-xs" />
+        <div key={i} className="skeleton-card">
+          <div className="skeleton-image" />
+          <div className="skeleton-lines">
+            <div className="skeleton-line skeleton-line-sm" />
+            <div className="skeleton-line skeleton-line-xs" />
+          </div>
         </div>
       ))}
     </div>
@@ -193,6 +151,22 @@ export default function FeedScreen() {
     goTo("detail");
   }, [setActiveProduct, goTo]);
 
+  const handleInterest = useCallback(async (product: Product) => {
+    if (!user) { goTo("auth"); return; }
+    try {
+      const data = await api("/api/sale-requests", {
+        method: "POST",
+        body: JSON.stringify({ product_id: product.id }),
+      });
+      if (data.request?.id) {
+        setActiveProduct({ ...product, _saleRequestId: data.request.id } as any);
+        goTo("chat");
+      }
+    } catch (err: any) {
+      console.error(err.message);
+    }
+  }, [user, goTo, setActiveProduct]);
+
   const handleRetry = useCallback(() => {
     setProducts([]);
     setNextCursor(null);
@@ -254,7 +228,7 @@ export default function FeedScreen() {
         <div className="products-grid">
           {filtered.length === 0 && <EmptyState category={activeCategory} search={debouncedSearch} />}
           {filtered.map(product => (
-            <ProductCard key={product.id} product={product} onOpen={openDetail} />
+            <ProductCard key={product.id} product={product} onOpen={openDetail} onInterest={handleInterest} showAction={!!user && product.user_id !== user.id && (product.status === "disponible" || product.status === "available")} />
           ))}
         </div>
       )}

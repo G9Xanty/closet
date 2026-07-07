@@ -62,54 +62,61 @@ export default function DetailScreen() {
 
   return (
     <div className="view detail-view">
-      <div className="detail-image">
-        {currentImg ? <img src={currentImg} alt="" /> : "SIN IMAGEN"}
-      </div>
-
-      {images.length > 1 && (
-        <div style={{ display: "flex", gap: 4, justifyContent: "center", marginTop: 2 }}>
-          {images.map((_, i) => (
-            <button key={i} onClick={() => setImgIndex(i)}
-              style={{
-                width: 10, height: 10, borderRadius: "50%", border: "none", cursor: "pointer",
-                background: i === imgIndex ? "var(--accent-red)" : "var(--border-mid)", padding: 0,
-              }} />
-          ))}
-        </div>
-      )}
-
-      <div className="detail-name">{product.name}</div>
-      <div className="detail-price">{formatPrice(product.price)}</div>
-
-      <div className="detail-meta-grid">
-        {product.brand && <div className="detail-pill">{product.brand}</div>}
-        <div className="detail-pill">Talla: {product.size || "N/D"}</div>
-        {conditionLabel && <div className="detail-pill">{conditionLabel}</div>}
-        <div className="detail-pill">{statusLabel}</div>
-      </div>
-
-      {rep !== 0 && (
-        <div className="detail-seller">
-          <span className={`reputation-badge ${rep > 0 ? "positive" : "negative"}`}>{repBadge}</span>
-        </div>
-      )}
-
-      <div className="detail-copy">{product.description || "Sin descripción."}</div>
-
-      <div className="detail-actions">
-        {!isOwn && isAvailable && (
-          <button className="small-btn" disabled={requesting} onClick={handleBuyRequest}>
-            {requesting ? "Enviando..." : "Me interesa"}
-          </button>
+      <div className="detail-layout">
+        {/* Left: Thumbnails column */}
+        {images.length > 1 && (
+          <div className="detail-thumbnails">
+            {images.map((url, i) => (
+              <img key={i}
+                src={url}
+                alt=""
+                className={`detail-thumbnail ${i === imgIndex ? "active" : ""}`}
+                onClick={() => setImgIndex(i)}
+              />
+            ))}
+          </div>
         )}
 
-        {isOwn && (
-          <button className="small-btn secondary" disabled>Tu publicación</button>
-        )}
-        <button className="small-btn secondary" onClick={() => goTo("feed")}>Volver al feed</button>
-      </div>
+        {/* Center: Main image */}
+        <div className="detail-image">
+          {currentImg ? <img src={currentImg} alt="" /> : <span>SIN IMAGEN</span>}
+        </div>
 
-      {statusMsg && <div className="status-text">{statusMsg}</div>}
+        {/* Right: Info panel */}
+        <div className="detail-info">
+          <div className="detail-name">{product.name}</div>
+          <div className="detail-price">{formatPrice(product.price)}</div>
+          <div className={`detail-status-badge ${p.status === "disponible" || p.status === "available" ? "available" : p.status === "reserved" || p.status === "reservado" ? "reserved" : "sold"}`}>{statusLabel}</div>
+
+          <div className="detail-meta-grid">
+            {product.brand && <div className="detail-pill">{product.brand}</div>}
+            <div className="detail-pill">Talla: {product.size || "N/D"}</div>
+            {conditionLabel && <div className="detail-pill">{conditionLabel}</div>}
+          </div>
+
+          {(rep !== 0) && (
+            <div className="detail-seller">
+              <span className={`reputation-badge ${rep > 0 ? "positive" : "negative"}`}>{repBadge}</span>
+            </div>
+          )}
+
+          <div className="detail-copy">{product.description || "Sin descripción."}</div>
+
+          <div className="detail-actions">
+            {!isOwn && isAvailable && (
+              <button className="detail-btn primary" disabled={requesting} onClick={handleBuyRequest}>
+                {requesting ? "Enviando..." : "Me interesa"}
+              </button>
+            )}
+            {isOwn && (
+              <button className="detail-btn secondary" disabled>Tu publicación</button>
+            )}
+            <button className="detail-btn secondary" onClick={() => goTo("feed")}>Volver al feed</button>
+          </div>
+
+          {statusMsg && <div className="status-text">{statusMsg}</div>}
+        </div>
+      </div>
     </div>
   );
 }
