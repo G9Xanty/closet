@@ -444,9 +444,7 @@ button {
   left: 0;
   width: 100%;
   height: 100%;
-  padding: 8%;
-  box-sizing: border-box;
-  object-fit: contain;
+  object-fit: cover;
   transition: transform 0.3s ease;
 }
 
@@ -717,16 +715,14 @@ button {
   color: rgba(255, 255, 255, 0.2);
   font-family: "Press Start 2P", monospace;
   font-size: clamp(11px, 0.8vw, 13px);
-  min-height: 280px;
-  max-height: 55vh;
+  aspect-ratio: 1;
 }
 
 .detail-image img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
-  background: #ededed;
 }
 
 .detail-info {
@@ -906,10 +902,7 @@ button {
     flex-shrink: 0;
   }
 
-  .detail-image {
-    min-height: 260px;
-    max-height: 50vh;
-  }
+
 }
 
 .profile-view {
