@@ -1,29 +1,91 @@
+import axios from "axios";
 import { supabase as _supabase } from "../lib/supabase";
 const supabase = _supabase!;
 
-const API_BASE = window.location.origin;
+const apiClient = axios.create({
+  baseURL: "",
+  timeout: 30000,
+  withCredentials: true,
+});
+
+apiClient.interceptors.request.use(
+  async (config) => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        config.headers.Authorization = `Bearer ${session.access_token}`;
+      }
+    } catch {}
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response?.status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
+    }
+    originalRequest._retry = true;
+    try {
+      const {
+        data: { session },
+        error: refreshError,
+      } = await supabase.auth.refreshSession();
+      if (refreshError || !session) {
+        await supabase.auth.signOut();
+        window.dispatchEvent(new CustomEvent("auth:logout"));
+        return Promise.reject(error);
+      }
+      originalRequest.headers.Authorization = `Bearer ${session.access_token}`;
+      return apiClient(originalRequest);
+    } catch {
+      await supabase.auth.signOut();
+      window.dispatchEvent(new CustomEvent("auth:logout"));
+      return Promise.reject(error);
+    }
+  }
+);
 
 export async function api(path: string, options?: RequestInit) {
+  const method = (options?.method || "GET").toUpperCase();
   const isFormData = options?.body instanceof FormData;
-  const method = options?.method || "GET";
-  console.log("[API REQUEST]", path, method);
 
-  const session = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
-  const token = session.data.session?.access_token || "";
-  if (!token && method !== "GET") console.warn("[API] No hay token para", method, path);
+  let data: unknown = undefined;
+  if (options?.body) {
+    if (isFormData) {
+      data = options.body;
+    } else if (typeof options.body === "string") {
+      try {
+        data = JSON.parse(options.body);
+      } catch {
+        data = options.body;
+      }
+    }
+  }
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    credentials: "include",
-    ...options,
-    headers: {
-      ...(isFormData ? {} : { "Content-Type": "application/json" }),
-      "X-Requested-With": "XMLHttpRequest",
-      ...(options?.headers || {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+  const headers: Record<string, string> = {
+    "X-Requested-With": "XMLHttpRequest",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
+  };
+
+  if (options?.headers) {
+    const h = new Headers(options.headers);
+    h.forEach((v, k) => {
+      if (k.toLowerCase() !== "authorization") headers[k] = v;
+    });
+  }
+
+  const res = await apiClient({
+    url: path,
+    method: method.toLowerCase(),
+    data,
+    headers,
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "Error de servidor.");
-  console.log("[API RESPONSE]", path, { ok: true, productCount: data.products?.length });
-  return data;
+
+  return res.data;
 }

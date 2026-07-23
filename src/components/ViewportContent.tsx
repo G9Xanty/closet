@@ -11,15 +11,13 @@ import SellerProfileScreen from "../screens/SellerProfileScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import AdminScreen from "../screens/AdminScreen";
 import RequestsScreen from "../screens/RequestsScreen";
-import ChatScreen from "../screens/ChatScreen";
+import NotificationsScreen from "../screens/NotificationsScreen";
 import "../styles/screens.css";
 
 const NAV_HIDE: string[] = ["play", "loading", "auth"];
 
 export default function ViewportContent() {
   const { screen, goTo, goBack, canGoBack } = useAppContext();
-
-  console.log('[VIEWPORT]', { currentScreen: screen });
 
   const renderScreen = () => {
     switch (screen) {
@@ -35,7 +33,7 @@ export default function ViewportContent() {
       case "settings":return <SettingsScreen />;
       case "admin":   return <AdminScreen />;
       case "requests":return <RequestsScreen />;
-      case "chat":    return <ChatScreen />;
+      case "notifications":return <NotificationsScreen />;
       default:        return <PlayScreen />;
     }
   };

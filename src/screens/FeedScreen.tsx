@@ -151,21 +151,14 @@ export default function FeedScreen() {
     goTo("detail");
   }, [setActiveProduct, goTo]);
 
-  const handleInterest = useCallback(async (product: Product) => {
+  const handleInterest = useCallback((product: Product) => {
     if (!user) { goTo("auth"); return; }
-    try {
-      const data = await api("/api/sale-requests", {
-        method: "POST",
-        body: JSON.stringify({ product_id: product.id }),
-      });
-      if (data.request?.id) {
-        setActiveProduct({ ...product, _saleRequestId: data.request.id } as any);
-        goTo("chat");
-      }
-    } catch (err: any) {
-      console.error(err.message);
-    }
-  }, [user, goTo, setActiveProduct]);
+    const phone = (product as any).seller_phone || "";
+    const clean = phone.replace(/[^0-9]/g, "");
+    if (!clean || clean.length < 8) return;
+    const msg = encodeURIComponent(`Hola! Vi "${product.name || product.title}" en Closet Elander y me interesa. ¿Sigue disponible?`);
+    window.open(`https://wa.me/506${clean}?text=${msg}`, "_blank");
+  }, [user, goTo]);
 
   const handleRetry = useCallback(() => {
     setProducts([]);

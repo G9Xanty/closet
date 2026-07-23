@@ -457,6 +457,18 @@ async function requireUser(req, res, next) {
       console.warn("[AUTH] Token ausente o muy corto");
       return res.status(401).json({ error: "No autenticado." });
     }
+
+    // Log token expiry for debugging
+    try {
+      const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString());
+      const expDate = new Date(payload.exp * 1000);
+      const now = Date.now();
+      const diffMs = expDate.getTime() - now;
+      console.log(`[AUTH] Token exp: ${expDate.toISOString()}, now: ${new Date(now).toISOString()}, diff: ${Math.round(diffMs/1000)}s`);
+    } catch (e) {
+      console.warn("[AUTH] Could not decode token:", e.message);
+    }
+
     let user = null;
     let err = null;
     try {
@@ -484,6 +496,10 @@ async function requireUser(req, res, next) {
     const meta = user.user_metadata || {};
     if (meta.banned) return res.status(403).json({ error: "Tu cuenta esta baneada." });
     req.user = user;
+
+    // Update last_active_at (fire and forget, don't block request)
+    supabaseAdmin.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("id", user.id).then(() => {}).catch(() => {});
+
     next();
   } catch (e) {
     console.error("[AUTH] requireUser catch:", e);
@@ -1133,6 +1149,7 @@ app.get("/api/products/:id", apiLimiter, async (req, res) => {
 
   let sellerPhone = row.seller_phone || "";
   let sellerReputation = 0;
+  let buyerProfile = null;
   try {
     const { data: profile } = await supabase
       .from("profiles")
@@ -1147,7 +1164,22 @@ app.get("/api/products/:id", apiLimiter, async (req, res) => {
     }
   } catch {}
 
-  res.json({ product: publicProduct({ ...row, seller_phone: sellerPhone, seller_reputation: sellerReputation }) });
+  // Get buyer info if product is sold
+  if (row.buyer_id) {
+    try {
+      const { data: buyer } = await supabase
+        .from("profiles")
+        .select("id, username, name, avatar")
+        .eq("id", row.buyer_id)
+        .single();
+      if (buyer) buyerProfile = buyer;
+    } catch {}
+  }
+
+  const product = publicProduct({ ...row, seller_phone: sellerPhone, seller_reputation: sellerReputation });
+  if (buyerProfile) product.buyer = buyerProfile;
+
+  res.json({ product });
 });
 
 app.post("/api/products", requireUser, productLimiter, async (req, res) => {
@@ -1374,9 +1406,55 @@ app.get("/api/sales/bought", requireUser, async (req, res) => {
   }
 });
 
-/* ── Sale request routes ────────────────────── */
+/* ── Transaction routes (Sprint 2.5) ────────────────────── */
 
-app.post("/api/sale-requests", requireUser, async (req, res) => {
+// Valid state transitions
+const VALID_TRANSITIONS = {
+  requested:       { buyer: ["cancelled"], seller: ["accepted", "rejected"] },
+  accepted:        { buyer: ["cancelled"], seller: ["waiting_payment"] },
+  waiting_payment: { buyer: ["payment_sent", "cancelled"] },
+  payment_sent:    { buyer: [], seller: ["payment_received", "payment_rejected"] },
+  payment_rejected:{ buyer: ["payment_sent", "cancelled"] },
+  payment_received:{ buyer: [], seller: ["waiting_shipping"] },
+  waiting_shipping:{ buyer: [], seller: ["shipped"] },
+  shipped:         { buyer: ["delivered"], seller: [] },
+  delivered:       { buyer: ["completed"], seller: ["completed"] },
+};
+
+// Event type mapping from status transitions
+const STATUS_TO_EVENT = {
+  "requested→accepted": "request_accepted",
+  "requested→rejected": "request_rejected",
+  "requested→cancelled": "request_cancelled",
+  "accepted→cancelled": "request_cancelled",
+  "accepted→waiting_payment": "payment_marked",
+  "waiting_payment→payment_sent": "payment_proof_uploaded",
+  "waiting_payment→cancelled": "request_cancelled",
+  "payment_sent→payment_received": "payment_confirmed",
+  "payment_sent→payment_rejected": "payment_rejected",
+  "payment_rejected→payment_sent": "payment_proof_uploaded",
+  "payment_rejected→cancelled": "request_cancelled",
+  "payment_received→waiting_shipping": "shipping_initiated",
+  "waiting_shipping→shipped": "shipped",
+  "shipped→delivered": "delivery_confirmed",
+  "delivered→completed": "transaction_completed",
+};
+
+async function logTransactionEvent(txId, actorId, fromStatus, toStatus, metadata = {}) {
+  const key = `${fromStatus}→${toStatus}`;
+  const eventType = STATUS_TO_EVENT[key];
+  if (!eventType) return;
+  await supabaseAdmin.from("transaction_events").insert({
+    transaction_id: txId,
+    actor_id: actorId,
+    event_type: eventType,
+    from_status: fromStatus,
+    to_status: toStatus,
+    metadata,
+  });
+}
+
+app.post("/api/transactions", requireUser, async (req, res) => {
   try {
     const { product_id } = req.body || {};
     if (!product_id) return res.status(400).json({ error: "Se requiere product_id." });
@@ -1387,42 +1465,44 @@ app.post("/api/sale-requests", requireUser, async (req, res) => {
     if (product.status !== "disponible" && product.status !== "available") return res.status(400).json({ error: "Prenda no disponible." });
 
     const { data: existing } = await supabaseAdmin
-      .from("sale_requests")
+      .from("transactions")
       .select("id, status")
       .eq("product_id", product_id)
       .eq("buyer_id", req.user.id)
-      .neq("status", "cancelled")
-      .neq("status", "rejected")
+      .not("status", "in", "(cancelled,rejected)")
       .maybeSingle();
     if (existing) return res.status(400).json({ error: "Ya solicitaste esta prenda." });
 
-    const { data: request, error } = await supabaseAdmin
-      .from("sale_requests")
+    const { data: transaction, error } = await supabaseAdmin
+      .from("transactions")
       .insert({ product_id, buyer_id: req.user.id, seller_id: product.user_id })
       .select()
       .single();
 
-    if (error) return res.status(500).json({ error: "Error al crear solicitud." });
+    if (error) return res.status(500).json({ error: "Error al crear transacción." });
 
     await supabaseAdmin.from("products").update({ status: "reserved" }).eq("id", product_id);
 
-    res.json({ ok: true, request });
+    // Log event: request_created
+    await logTransactionEvent(transaction.id, req.user.id, null, "requested");
+
+    res.json({ ok: true, transaction });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.get("/api/sale-requests/mine", requireUser, async (req, res) => {
+app.get("/api/transactions/mine", requireUser, async (req, res) => {
   try {
     const { data: asBuyer } = await supabaseAdmin
-      .from("sale_requests")
+      .from("transactions")
       .select("*, product:products(*)")
       .eq("buyer_id", req.user.id)
       .order("created_at", { ascending: false })
       .limit(50);
 
     const { data: asSeller } = await supabaseAdmin
-      .from("sale_requests")
+      .from("transactions")
       .select("*, product:products(*)")
       .eq("seller_id", req.user.id)
       .order("created_at", { ascending: false })
@@ -1434,27 +1514,31 @@ app.get("/api/sale-requests/mine", requireUser, async (req, res) => {
   }
 });
 
-app.patch("/api/sale-requests/:id", requireUser, async (req, res) => {
+app.patch("/api/transactions/:id", requireUser, async (req, res) => {
   try {
     const { status } = req.body || {};
-    if (!status || !["accepted", "rejected", "cancelled", "completed"].includes(status)) {
+    const ALL_VALID = ["accepted","rejected","cancelled","completed",
+      "waiting_payment","payment_sent","payment_received","payment_rejected",
+      "waiting_shipping","shipped","delivered"];
+    if (!status || !ALL_VALID.includes(status)) {
       return res.status(400).json({ error: "Estado invalido." });
     }
 
-    const { data: sr } = await supabaseAdmin.from("sale_requests").select("*").eq("id", req.params.id).single();
-    if (!sr) return res.status(404).json({ error: "Solicitud no encontrada." });
+    const { data: tx } = await supabaseAdmin.from("transactions").select("*").eq("id", req.params.id).single();
+    if (!tx) return res.status(404).json({ error: "Transacción no encontrada." });
 
-    const isBuyer = sr.buyer_id === req.user.id;
-    const isSeller = sr.seller_id === req.user.id;
+    const isBuyer = tx.buyer_id === req.user.id;
+    const isSeller = tx.seller_id === req.user.id;
     if (!isBuyer && !isSeller) return res.status(403).json({ error: "No tienes permiso." });
 
-    if (isBuyer && !["cancelled"].includes(status)) return res.status(403).json({ error: "Solo puedes cancelar." });
-    if (isSeller && !["accepted", "rejected"].includes(status)) return res.status(403).json({ error: "Solo puedes aceptar o rechazar." });
-
-    if (sr.status !== "requested") return res.status(400).json({ error: "Solo se pueden modificar solicitudes pendientes." });
+    const role = isBuyer ? "buyer" : "seller";
+    const allowed = VALID_TRANSITIONS[tx.status]?.[role] || [];
+    if (!allowed.includes(status)) {
+      return res.status(403).json({ error: `No puedes cambiar de "${tx.status}" a "${status}".` });
+    }
 
     const { data, error } = await supabaseAdmin
-      .from("sale_requests")
+      .from("transactions")
       .update({ status, updated_at: new Date().toISOString() })
       .eq("id", req.params.id)
       .select()
@@ -1462,70 +1546,36 @@ app.patch("/api/sale-requests/:id", requireUser, async (req, res) => {
 
     if (error) return res.status(500).json({ error: "Error al actualizar." });
 
+    // Log state transition event
+    await logTransactionEvent(tx.id, req.user.id, tx.status, status);
+
+    // Product status transitions
     if (status === "rejected" || status === "cancelled") {
-      await supabaseAdmin.from("products").update({ status: "disponible" }).eq("id", sr.product_id);
+      await supabaseAdmin.from("products").update({ status: "disponible" }).eq("id", tx.product_id);
     }
     if (status === "completed") {
-      await supabaseAdmin.from("products").update({ status: "sold" }).eq("id", sr.product_id);
+      await supabaseAdmin.from("products").update({ status: "sold" }).eq("id", tx.product_id);
     }
 
-    res.json({ ok: true, request: data });
+    res.json({ ok: true, transaction: data });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-/* ── Messages routes ────────────────────────── */
-
-app.get("/api/sale-requests/:id/messages", requireUser, async (req, res) => {
+app.get("/api/transactions/:id/events", requireUser, async (req, res) => {
   try {
-    const { data: sr } = await supabaseAdmin.from("sale_requests").select("buyer_id, seller_id").eq("id", req.params.id).single();
-    if (!sr) return res.status(404).json({ error: "Solicitud no encontrada." });
-    if (sr.buyer_id !== req.user.id && sr.seller_id !== req.user.id) return res.status(403).json({ error: "No tienes permiso." });
+    const { data: tx } = await supabaseAdmin.from("transactions").select("buyer_id, seller_id").eq("id", req.params.id).single();
+    if (!tx) return res.status(404).json({ error: "Transacción no encontrada." });
+    if (tx.buyer_id !== req.user.id && tx.seller_id !== req.user.id) return res.status(403).json({ error: "No tienes permiso." });
 
-    const { data: messages } = await supabaseAdmin
-      .from("messages")
+    const { data: events } = await supabaseAdmin
+      .from("transaction_events")
       .select("*")
-      .eq("sale_request_id", req.params.id)
-      .order("created_at", { ascending: true })
-      .limit(100);
+      .eq("transaction_id", req.params.id)
+      .order("created_at", { ascending: true });
 
-    res.json({ messages: messages || [] });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post("/api/sale-requests/:id/messages", requireUser, async (req, res) => {
-  try {
-    const { content } = req.body || {};
-    if (!content || !content.trim()) return res.status(400).json({ error: "Mensaje vacio." });
-
-    const { data: sr } = await supabaseAdmin.from("sale_requests").select("buyer_id, seller_id, status").eq("id", req.params.id).single();
-    if (!sr) return res.status(404).json({ error: "Solicitud no encontrada." });
-    if (sr.buyer_id !== req.user.id && sr.seller_id !== req.user.id) return res.status(403).json({ error: "No tienes permiso." });
-
-    const { data: message, error } = await supabaseAdmin
-      .from("messages")
-      .insert({ sale_request_id: req.params.id, sender_id: req.user.id, content: content.trim() })
-      .select()
-      .single();
-
-    if (error) return res.status(500).json({ error: "Error al enviar mensaje." });
-    res.json({ ok: true, message });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.patch("/api/messages/:id/read", requireUser, async (req, res) => {
-  try {
-    const { data: msg } = await supabaseAdmin.from("messages").select("id, sender_id, sale_request_id").eq("id", req.params.id).single();
-    if (!msg) return res.status(404).json({ error: "Mensaje no encontrado." });
-    if (msg.sender_id === req.user.id) return res.status(400).json({ error: "No puedes marcar tus propios mensajes." });
-
-    await supabaseAdmin.from("messages").update({ read_at: new Date().toISOString() }).eq("id", req.params.id);
-    res.json({ ok: true });
+    res.json({ events: events || [] });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -1549,6 +1599,271 @@ app.post("/api/reports", requireUser, async (req, res) => {
 
     if (error) return res.status(500).json({ error: "Error al crear reporte." });
     res.json({ ok: true, report: data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── Stats & Verification routes ─────────────── */
+
+// GET /api/users/:id/stats - User statistics (public)
+app.get("/api/users/:id/stats", async (req, res) => {
+  try {
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("total_products_published, total_products_sold, total_products_bought, verification_level, last_active_at, created_at")
+      .eq("id", req.params.id)
+      .single();
+
+    if (!profile) return res.status(404).json({ error: "Usuario no encontrado." });
+
+    // Count verified sales for verification rate
+    const { count: verifiedCount } = await supabaseAdmin
+      .from("product_verifications")
+      .select("*", { count: "exact", head: true })
+      .eq("seller_id", req.params.id)
+      .eq("status", "verified");
+
+    const totalSold = profile.total_products_sold || 0;
+    const verificationRate = totalSold > 0 ? Math.round(((verifiedCount || 0) / totalSold) * 100) : 0;
+
+    res.json({
+      lastActive: profile.last_active_at,
+      productsPublished: profile.total_products_published || 0,
+      productsSold: totalSold,
+      productsBought: profile.total_products_bought || 0,
+      verificationLevel: profile.verification_level || "none",
+      verificationRate,
+      memberSince: profile.created_at,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/products/:id/mark-sold - Mark product as sold with shipping info + evidence
+app.post("/api/products/:id/mark-sold", requireUser, async (req, res) => {
+  try {
+    const { buyer_id, includes_shipping, shipping_cost, evidence_url, evidence_type, notes } = req.body || {};
+    if (!buyer_id) return res.status(400).json({ error: "Se requiere buyer_id." });
+
+    const { data: product } = await supabaseAdmin.from("products").select("*").eq("id", req.params.id).single();
+    if (!product) return res.status(404).json({ error: "Producto no encontrado." });
+    if (product.user_id !== req.user.id) return res.status(403).json({ error: "Solo el vendedor puede marcar como vendido." });
+    if (product.status === "sold") return res.status(400).json({ error: "Producto ya fue vendido." });
+
+    // Anti-fraud: minimum 24h since publication
+    const publishedAt = new Date(product.created_at).getTime();
+    const now = Date.now();
+    const hoursSincePublished = (now - publishedAt) / (1000 * 60 * 60);
+    if (hoursSincePublished < 24) {
+      return res.status(400).json({ error: "Deben pasar al menos 24 horas desde la publicación." });
+    }
+
+    // Anti-fraud: max 5 verified sales per day
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const { count: todaySales } = await supabaseAdmin
+      .from("product_verifications")
+      .select("*", { count: "exact", head: true })
+      .eq("seller_id", req.user.id)
+      .gte("created_at", today.toISOString());
+
+    if ((todaySales || 0) >= 5) {
+      return res.status(400).json({ error: "Límite de 5 ventas verificadas por día alcanzado." });
+    }
+
+    // Build metadata with shipping info
+    const metadata = {
+      shipping_included: includes_shipping !== false,
+      shipping_cost: includes_shipping !== false ? 0 : (Number(shipping_cost) || 0),
+    };
+
+    // Update product
+    await supabaseAdmin.from("products").update({
+      status: "sold",
+      sold_at: new Date().toISOString(),
+      buyer_id,
+      metadata,
+    }).eq("id", req.params.id);
+
+    // Create verification record
+    const { data: verification, error } = await supabaseAdmin
+      .from("product_verifications")
+      .insert({
+        product_id: req.params.id,
+        seller_id: req.user.id,
+        buyer_id,
+        evidence_url: evidence_url || null,
+        evidence_type: evidence_type || null,
+        seller_notes: notes || null,
+        status: evidence_url ? "submitted" : "pending",
+      })
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: "Error al crear verificación." });
+
+    // Auto-generate notification for buyer
+    const buyerProfile = await supabaseAdmin.from("profiles").select("username").eq("id", buyer_id).single();
+    const sellerProfile = await supabaseAdmin.from("profiles").select("username").eq("id", req.user.id).single();
+    const productName = p.name || p.title || "prenda";
+    const sellerName = sellerProfile?.data?.username || "Vendedor";
+
+    await createNotification(buyer_id, "product_sold", "Producto marcado como vendido", `${sellerName} marcó "${productName}" como vendido.`, {
+      product_id: Number(req.params.id),
+    });
+
+    res.json({ ok: true, verification });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/products/:id/confirm-receipt - Buyer confirms receipt
+app.post("/api/products/:id/confirm-receipt", requireUser, async (req, res) => {
+  try {
+    const { data: verification } = await supabaseAdmin
+      .from("product_verifications")
+      .select("*")
+      .eq("product_id", req.params.id)
+      .single();
+
+    if (!verification) return res.status(404).json({ error: "Verificación no encontrada." });
+    if (verification.buyer_id !== req.user.id) return res.status(403).json({ error: "Solo el comprador puede confirmar." });
+    if (verification.buyer_confirmed) return res.status(400).json({ error: "Ya confirmaste la recepción." });
+
+    const { error } = await supabaseAdmin
+      .from("product_verifications")
+      .update({
+        buyer_confirmed: true,
+        buyer_confirmed_at: new Date().toISOString(),
+        status: "verified",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", verification.id);
+
+    if (error) return res.status(500).json({ error: "Error al confirmar." });
+
+    // Auto-generate notification for seller
+    const { data: product } = await supabaseAdmin.from("products").select("name, title, user_id").eq("id", req.params.id).single();
+    const buyerProfile = await supabaseAdmin.from("profiles").select("username").eq("id", req.user.id).single();
+    const productName = product?.name || product?.title || "prenda";
+    const buyerName = buyerProfile?.data?.username || "Comprador";
+
+    await createNotification(product.user_id, "receipt_confirmed", "Recepción confirmada", `${buyerName} confirmó recepción de "${productName}". Venta verificada.`, {
+      product_id: Number(req.params.id),
+    });
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/products/:id/evidence - Get verification evidence (public)
+app.get("/api/products/:id/evidence", async (req, res) => {
+  try {
+    const { data: verification } = await supabaseAdmin
+      .from("product_verifications")
+      .select("status, evidence_url, evidence_type, buyer_confirmed, created_at")
+      .eq("product_id", req.params.id)
+      .single();
+
+    if (!verification) return res.json({ verified: false });
+
+    res.json({
+      verified: verification.status === "verified",
+      status: verification.status,
+      evidenceUrl: verification.evidence_url,
+      evidenceType: verification.evidence_type,
+      buyerConfirmed: verification.buyer_confirmed,
+      verifiedAt: verification.created_at,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── Notifications ─────────────────────────────────── */
+
+async function createNotification(userId, type, title, body, extra = {}) {
+  try {
+    await supabaseAdmin.from("notifications").insert({
+      user_id: userId,
+      type,
+      title,
+      body: body || null,
+      product_id: extra.product_id || null,
+      transaction_id: extra.transaction_id || null,
+    });
+  } catch (e) {
+    console.error("[NOTIFICATION] Failed to create:", e.message);
+  }
+}
+
+// GET /api/notifications — list user's notifications
+app.get("/api/notifications", requireUser, async (req, res) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 30, 100);
+    const { data, error } = await supabaseAdmin
+      .from("notifications")
+      .select("*")
+      .eq("user_id", req.user.id)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ notifications: data || [] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/notifications/unread-count — count unread
+app.get("/api/notifications/unread-count", requireUser, async (req, res) => {
+  try {
+    const { count } = await supabaseAdmin
+      .from("notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", req.user.id)
+      .is("read_at", null);
+
+    res.json({ count: count || 0 });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/notifications/:id/read — mark as read
+app.patch("/api/notifications/:id/read", requireUser, async (req, res) => {
+  try {
+    const { error } = await supabaseAdmin
+      .from("notifications")
+      .update({ read_at: new Date().toISOString() })
+      .eq("id", req.params.id)
+      .eq("user_id", req.user.id)
+      .is("read_at", null);
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/notifications/read-all — mark all as read
+app.patch("/api/notifications/read-all", requireUser, async (req, res) => {
+  try {
+    const now = new Date().toISOString();
+    const { error } = await supabaseAdmin
+      .from("notifications")
+      .update({ read_at: now })
+      .eq("user_id", req.user.id)
+      .is("read_at", null);
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

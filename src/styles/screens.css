@@ -1594,3 +1594,424 @@ button {
   text-align: center;
   letter-spacing: 0.5px;
 }
+
+/* ── Stats section ── */
+
+.stats-section {
+  background: rgba(0, 255, 255, 0.03);
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 12px;
+  margin: 8px 0;
+}
+
+.stats-header {
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  color: #00ffff;
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+}
+
+.stats-grid {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 10px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-family: "Press Start 2P", monospace;
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.stat-label {
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 2px;
+  letter-spacing: 0.5px;
+}
+
+.stats-verification {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.verification-badge {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  padding: 3px 8px;
+  border: 1px solid;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.verification-rate {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.stats-last-active {
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+/* ── Verification section (DetailScreen) ── */
+
+.verification-section {
+  background: rgba(255, 215, 0, 0.05);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 6px;
+  padding: 10px;
+  margin: 8px 0;
+}
+
+.verification-title {
+  font-family: "Press Start 2P", monospace;
+  font-size: 9px;
+  color: #ffd700;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.verification-status {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.5px;
+}
+
+.verification-status.verified {
+  color: #4caf50;
+}
+
+.verification-status.pending {
+  color: #ff9800;
+}
+
+.verification-status.rejected {
+  color: #e2412f;
+}
+
+.verification-confirmed {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  color: #4caf50;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+}
+
+/* ── Shipping info (DetailScreen) ── */
+
+.shipping-info {
+  background: rgba(0, 255, 255, 0.03);
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 10px;
+  margin: 8px 0;
+}
+
+.shipping-label {
+  font-family: "Press Start 2P", monospace;
+  font-size: 9px;
+  color: #00ffff;
+  margin-bottom: 4px;
+}
+
+.shipping-value {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.buyer-info {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 6px;
+}
+
+/* ── Modal ── */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modal-content {
+  background: #111;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  width: 100%;
+  max-width: 360px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  font-family: "Press Start 2P", monospace;
+  font-size: 11px;
+  color: #00ffff;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.modal-field {
+  margin-bottom: 12px;
+}
+
+.modal-label {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.modal-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+}
+
+.modal-toggle input {
+  accent-color: #00ffff;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.modal-actions .small-btn {
+  flex: 1;
+}
+
+.buyer-results {
+  background: #1a1a1a;
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  border-radius: 4px;
+  margin-top: 4px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.buyer-result {
+  padding: 8px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.buyer-result:hover,
+.buyer-result.selected {
+  background: rgba(0, 255, 255, 0.1);
+  color: #00ffff;
+}
+
+.buyer-selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  background: rgba(0, 255, 255, 0.1);
+  border-radius: 4px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  color: #00ffff;
+  margin-top: 6px;
+}
+
+.evidence-preview {
+  width: 100%;
+  max-height: 120px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-top: 6px;
+  border: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+/* ── Notifications ── */
+
+.notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.notif-header .section-title {
+  margin-bottom: 0;
+}
+
+.notif-empty {
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.notif-empty-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.notif-empty p {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.notif-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.notif-card:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.notif-card.unread {
+  background: rgba(0, 255, 255, 0.04);
+  border: 1px solid rgba(0, 255, 255, 0.08);
+}
+
+.notif-card.read {
+  opacity: 0.6;
+}
+
+.notif-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+}
+
+.notif-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-title {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 2px;
+}
+
+.notif-body {
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
+}
+
+.notif-time {
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  color: rgba(0, 255, 255, 0.4);
+  margin-top: 4px;
+}
+
+.notif-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00ffff;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.notif-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ff4444;
+  color: #fff;
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  padding: 0 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* ── PWA Install Banner ── */
+
+.install-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #111;
+  border-top: 1px solid rgba(0, 255, 255, 0.15);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 999;
+  gap: 12px;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.6);
+}
+
+.install-text {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  flex: 1;
+}
+
+.install-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.install-btn {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  padding: 8px 14px;
+  background: rgba(0, 255, 255, 0.1);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  color: #00ffff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.install-btn:hover {
+  background: rgba(0, 255, 255, 0.2);
+  border-color: rgba(0, 255, 255, 0.5);
+}

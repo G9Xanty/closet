@@ -30,13 +30,13 @@ export default function ProfileScreen() {
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [whatsappEnabled, setWhatsappEnabled] = useState(false);
   const [phonePrivate, setPhonePrivate] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [reputation, setReputation] = useState({ score: 0, verified: 0, external: 0, reports: 0 });
   const [avatars, setAvatars] = useState<AvatarInfo[]>(ALL_AVATARS);
   const [selectedAvatar, setSelectedAvatar] = useState(user?.avatar || "avatar-1");
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const loadedRef = useRef(false);
 
   useEffect(() => {
@@ -50,7 +50,6 @@ export default function ProfileScreen() {
           setBio(p.bio || "");
           setLocation(p.location || "");
           setPhoneNumber(p.phone_number || "");
-          setWhatsappEnabled(p.whatsapp_enabled || false);
           setPhonePrivate(p.phone_private !== false);
           setReputation({
             score: p.reputation_score || 0,
@@ -65,6 +64,9 @@ export default function ProfileScreen() {
         .then(data => {
           if (data.avatars) setAvatars(data.avatars);
         })
+        .catch(() => {});
+      api("/api/notifications/unread-count")
+        .then(data => setUnreadCount(data.count || 0))
         .catch(() => {});
     }
   }, [user]);
@@ -92,7 +94,6 @@ export default function ProfileScreen() {
         bio: bio.trim(),
         location: location.trim(),
         phone_number: phoneNumber.trim(),
-        whatsapp_enabled: whatsappEnabled,
         phone_private: phonePrivate
       };
       if (selectedAvatar !== user!.avatar) {
@@ -190,16 +191,13 @@ export default function ProfileScreen() {
           </div>
 
           <div className="profile-section">
-            <div className="section-title">Contacto (privado)</div>
+            <div className="section-title">Contacto (WhatsApp para ventas)</div>
             <input className="field" type="tel" placeholder="WhatsApp (8 dígitos)" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} />
-            <label className="profile-toggle">
-              <input type="checkbox" checked={whatsappEnabled} onChange={e => setWhatsappEnabled(e.target.checked)} />
-              <span>WhatsApp habilitado</span>
-            </label>
             <label className="profile-toggle">
               <input type="checkbox" checked={phonePrivate} onChange={e => setPhonePrivate(e.target.checked)} />
               <span>Número privado (no visible en perfil público)</span>
             </label>
+            <div className="profile-hint">Tu número se usará para que los compradores te contacten por WhatsApp.</div>
           </div>
 
           <button className="small-btn" disabled={saving} onClick={handleSave}>
@@ -214,7 +212,11 @@ export default function ProfileScreen() {
             <div className="section-title">Acciones</div>
             <button className="small-btn" onClick={() => goTo("feed")}>Ir al feed</button>
             <button className="small-btn" onClick={() => goTo("upload")}>Vender prenda</button>
-            <button className="small-btn" onClick={() => goTo("requests")}>Mis solicitudes</button>
+            <button className="small-btn" onClick={() => goTo("requests")}>Mis transacciones</button>
+            <button className="small-btn" onClick={() => goTo("notifications")}>
+              Notificaciones
+              {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
+            </button>
           </div>
           <div className="profile-section">
             <div className="section-title">Cuenta</div>

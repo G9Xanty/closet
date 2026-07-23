@@ -89,6 +89,22 @@ export default function UploadProductScreen() {
     setIsError(false);
     setFileErrors([]);
 
+    // Check if user has phone number registered
+    try {
+      const profileData = await api("/api/profiles/me");
+      const phone = profileData.profile?.phone_number || "";
+      const cleanPhone = phone.replace(/[^0-9]/g, "");
+      if (!cleanPhone || cleanPhone.length < 8) {
+        setStatus("Debes registrar tu número de WhatsApp en tu perfil para vender.");
+        setIsError(true);
+        return;
+      }
+    } catch {
+      setStatus("Error al verificar perfil. Intenta de nuevo.");
+      setIsError(true);
+      return;
+    }
+
     const trimmedTitle = title.trim();
     const priceNum = Number(price);
     const trimmedSize = size.trim();

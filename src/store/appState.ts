@@ -11,7 +11,7 @@ export type Screen =
   | "settings"
   | "admin"
   | "requests"
-  | "chat";
+  | "notifications";
 
 export interface Product {
   id: number;
@@ -36,6 +36,8 @@ export interface Product {
   image_url_4?: string;
   image?: string;
   images?: string[];
+  metadata?: Record<string, any>;
+  buyer?: { id: string; username: string; name?: string; avatar?: string };
 }
 
 export interface Message {
@@ -66,17 +68,33 @@ export interface Sale {
   seller?: { id: string; username: string; avatar?: string };
 }
 
-export interface SaleRequest {
+export interface Transaction {
   id: string;
   product_id: number;
   buyer_id: string;
   seller_id: string;
-  status: "requested" | "accepted" | "rejected" | "cancelled" | "completed";
+  status: "requested" | "accepted" | "rejected" | "cancelled" | "completed"
+    | "waiting_payment" | "payment_sent" | "payment_received" | "payment_rejected"
+    | "waiting_shipping" | "shipped" | "delivered" | "dispute";
   created_at: string;
   updated_at: string;
   product?: Product;
   buyer?: { id: string; username: string; avatar?: string };
 }
+
+export interface TransactionEvent {
+  id: string;
+  transaction_id: string;
+  actor_id: string;
+  event_type: string;
+  from_status: string | null;
+  to_status: string;
+  metadata: Record<string, any>;
+  created_at: string;
+}
+
+// Backward compatibility alias
+export type SaleRequest = Transaction;
 
 export interface Report {
   id: string;
