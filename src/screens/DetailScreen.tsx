@@ -32,6 +32,25 @@ const VERIFICATION_STATUS_LABELS: Record<string, string> = {
   disputed: "En disputa",
 };
 
+const RANK_THRESHOLDS = [
+  { sales: 0, name: "Nuevo", color: "#888" },
+  { sales: 1, name: "Vendedor", color: "#4caf50" },
+  { sales: 5, name: "Pro", color: "#2196f3" },
+  { sales: 10, name: "Top", color: "#ff9800" },
+  { sales: 25, name: "Élite", color: "#9c27b0" },
+  { sales: 50, name: "Leyenda", color: "#ffd700" },
+];
+
+function getRank(verifiedSales: number) {
+  let rank = RANK_THRESHOLDS[0];
+  for (const r of RANK_THRESHOLDS) {
+    if (verifiedSales >= r.sales) rank = r;
+  }
+  const nextIdx = RANK_THRESHOLDS.findIndex(r => r.sales > verifiedSales);
+  const next = nextIdx >= 0 ? RANK_THRESHOLDS[nextIdx] : null;
+  return { current: rank, next, progress: next ? (verifiedSales - rank.sales) / (next.sales - rank.sales) : 1 };
+}
+
 function openWhatsApp(phone: string, productName: string) {
   const clean = phone.replace(/[^0-9]/g, "");
   const msg = encodeURIComponent(`Hola! Vi "${productName}" en Closet Elander y me interesa. ¿Sigue disponible?`);
@@ -49,6 +68,11 @@ export default function DetailScreen() {
   const [verification, setVerification] = useState<any>(null);
   const [statusMsg, setStatusMsg] = useState("");
 
+  // Owner menu
+  const [showOwnerMenu, setShowOwnerMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   // Mark as sold modal state
   const [showSellModal, setShowSellModal] = useState(false);
   const [buyerSearch, setBuyerSearch] = useState("");
@@ -61,6 +85,9 @@ export default function DetailScreen() {
   const [marking, setMarking] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Seller rank
+  const [sellerSales, setSellerSales] = useState(0);
 
   if (!product) return null;
   const p = product;
@@ -81,6 +108,8 @@ export default function DetailScreen() {
   const rep = p.seller_reputation || 0;
   const repBadge = rep > 0 ? `★ ${rep}` : rep < 0 ? `☆ ${rep}` : "—";
 
+  const rank = getRank(sellerSales);
+
   // Load verification status for sold products
   useEffect(() => {
     if (isSold) {
@@ -91,6 +120,15 @@ export default function DetailScreen() {
         .catch(() => {});
     }
   }, [p.id, isSold]);
+
+  // Load seller rank
+  useEffect(() => {
+    if (p.user_id) {
+      api(`/api/profiles/${p.user_id}`)
+        .then((data: any) => setSellerSales(data.profile?.sales_verified || 0))
+        .catch(() => {});
+    }
+  }, [p.user_id]);
 
   // Search buyers
   useEffect(() => {
@@ -127,7 +165,6 @@ export default function DetailScreen() {
       let evidenceUrl = "";
       let evidenceType = "";
 
-      // Upload evidence if provided
       if (evidenceFile) {
         const formData = new FormData();
         formData.append("image", evidenceFile);
@@ -179,6 +216,20 @@ export default function DetailScreen() {
     }
   }
 
+  async function handleDeleteProduct() {
+    if (!user) return;
+    setDeleting(true);
+    try {
+      await api(`/api/products/${p.id}`, { method: "DELETE" });
+      setShowDeleteConfirm(false);
+      goTo("feed");
+    } catch (err: any) {
+      setStatusMsg(err.message || "Error al eliminar");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="view detail-view">
       <div className="detail-layout">
@@ -210,20 +261,33 @@ export default function DetailScreen() {
             {conditionLabel && <div className="detail-pill">{conditionLabel}</div>}
           </div>
 
-          {(rep !== 0) && (
-            <div className="detail-seller">
+          <div className="detail-seller">
+            {(rep !== 0) && (
               <span className={`reputation-badge ${rep > 0 ? "positive" : "negative"}`}>{repBadge}</span>
+            )}
+            <div className="seller-rank" style={{ borderColor: rank.current.color }}>
+              <span className="seller-rank-name" style={{ color: rank.current.color }}>{rank.current.name}</span>
+              {rank.next && (
+                <div className="rank-progress-bar">
+                  <div className="rank-progress-fill" style={{ width: `${Math.round(rank.progress * 100)}%`, background: rank.current.color }} />
+                </div>
+              )}
+              {rank.next && (
+                <span className="seller-rank-next">{sellerSales}/{rank.next.sales} ventas</span>
+              )}
+              {!rank.next && (
+                <span className="seller-rank-next">{sellerSales} ventas verificadas</span>
+              )}
             </div>
-          )}
+          </div>
 
           <div className="detail-copy">{product.description || "Sin descripción."}</div>
 
-          {/* Shipping info for sold products */}
           {isSold && (
             <div className="shipping-info">
-              <div className="shipping-label">🚚 Envío:</div>
+              <div className="shipping-label">Envío:</div>
               <div className="shipping-value">
-                {shippingIncluded ? "Incluido ✓" : `+${formatPrice(shippingCostValue)}`}
+                {shippingIncluded ? "Incluido" : `+${formatPrice(shippingCostValue)}`}
               </div>
               {p.buyer && (
                 <div className="buyer-info">
@@ -233,7 +297,6 @@ export default function DetailScreen() {
             </div>
           )}
 
-          {/* Verification status for sold products */}
           {isSold && verification && (
             <div className="verification-section">
               <div className="verification-title">Estado de verificación</div>
@@ -241,13 +304,12 @@ export default function DetailScreen() {
                 {VERIFICATION_STATUS_LABELS[verification.status] || verification.status}
               </div>
               {verification.buyerConfirmed && (
-                <div className="verification-confirmed">Comprador confirmó recepción ✓</div>
+                <div className="verification-confirmed">Comprador confirmó recepción</div>
               )}
             </div>
           )}
 
           <div className="detail-actions">
-            {/* WhatsApp button for buyers */}
             {!isOwn && isAvailable && hasWhatsApp && (
               <button className="detail-btn primary" onClick={() => openWhatsApp(sellerPhone, product.name || product.title || "prenda")}>
                 Contactar por WhatsApp
@@ -259,23 +321,29 @@ export default function DetailScreen() {
               </button>
             )}
 
-            {/* Mark as sold (owner only, available products) */}
             {isOwn && isAvailable && (
-              <button className="detail-btn primary" onClick={() => setShowSellModal(true)}>
-                Marcar como vendido
-              </button>
+              <div className="owner-actions">
+                <button className="detail-btn primary" onClick={() => setShowSellModal(true)}>
+                  Marcar como vendido
+                </button>
+                <button className="detail-btn danger" onClick={() => setShowDeleteConfirm(true)}>
+                  Eliminar prenda
+                </button>
+              </div>
             )}
 
-            {/* Confirm receipt (buyer only, sold products with pending verification) */}
             {isOwn && isSold && verification?.status === "pending" && (
               <button className="detail-btn primary" disabled={confirming} onClick={handleConfirmReceipt}>
                 {confirming ? "Confirmando..." : "Confirmar recepción"}
               </button>
             )}
 
-            {isOwn && (
-              <button className="detail-btn secondary" disabled>Tu publicación</button>
+            {isOwn && isSold && !isAvailable && (
+              <button className="detail-btn danger" onClick={() => setShowDeleteConfirm(true)}>
+                Eliminar prenda
+              </button>
             )}
+
             <button className="detail-btn secondary" onClick={() => goTo("feed")}>Volver al feed</button>
           </div>
 
@@ -337,7 +405,8 @@ export default function DetailScreen() {
             </div>
 
             <div className="modal-field">
-              <label className="modal-label">Evidencia (opcional)</label>
+              <label className="modal-label">Evidencia de venta (opcional pero recomendada)</label>
+              <div className="modal-hint">Sube una foto del producto empaquetado, recibo de envío o captura de conversación para verificar la venta y subir de rango.</div>
               <input type="file" accept="image/*" onChange={handleEvidenceChange} />
               {evidencePreview && (
                 <img src={evidencePreview} alt="Evidencia" className="evidence-preview" />
@@ -352,6 +421,22 @@ export default function DetailScreen() {
                 onClick={handleMarkSold}
               >
                 {marking ? "Guardando..." : "Confirmar venta"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">Eliminar prenda</div>
+            <div className="modal-hint">¿Estás seguro? Esta acción no se puede deshacer. Se eliminarán todas las imágenes asociadas.</div>
+            <div className="modal-actions">
+              <button className="small-btn secondary" onClick={() => setShowDeleteConfirm(false)}>Cancelar</button>
+              <button className="small-btn danger" disabled={deleting} onClick={handleDeleteProduct}>
+                {deleting ? "Eliminando..." : "Eliminar"}
               </button>
             </div>
           </div>

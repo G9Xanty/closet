@@ -169,7 +169,7 @@ export function useAuth() {
       if (token) {
         await fetch(`/api/auth/sync`, {
           method: "POST",
-          headers: { "Authorization": `Bearer ${token}` }
+          headers: { "Authorization": `Bearer ${token}`, "X-Requested-With": "XMLHttpRequest" }
         });
       }
     } catch {} // sync best-effort

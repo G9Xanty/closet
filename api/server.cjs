@@ -347,6 +347,7 @@ function publicProfileRow(row) {
     dealer_id: row.dealer_id || "",
     avatar: row.avatar || "avatar-1",
     reputation_score: row.reputation_score || 0,
+    sales_verified: row.sales_verified || 0,
     created_at: row.created_at,
     updated_at: row.updated_at
   };
@@ -880,7 +881,7 @@ app.patch("/api/profiles/me", requireUser, async (req, res) => {
     if (updates.phone_private !== undefined) updates.phone_private = Boolean(updates.phone_private);
 
     const profile = await ensureProfile(req.user.id);
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("profiles")
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq("id", req.user.id)
@@ -1705,10 +1706,10 @@ app.post("/api/products/:id/mark-sold", requireUser, async (req, res) => {
     if (error) return res.status(500).json({ error: "Error al crear verificación." });
 
     // Auto-generate notification for buyer
-    const buyerProfile = await supabaseAdmin.from("profiles").select("username").eq("id", buyer_id).single();
-    const sellerProfile = await supabaseAdmin.from("profiles").select("username").eq("id", req.user.id).single();
-    const productName = p.name || p.title || "prenda";
-    const sellerName = sellerProfile?.data?.username || "Vendedor";
+    const { data: buyerProfile } = await supabaseAdmin.from("profiles").select("username").eq("id", buyer_id).maybeSingle();
+    const { data: sellerProfile } = await supabaseAdmin.from("profiles").select("username").eq("id", req.user.id).maybeSingle();
+    const productName = (product && product.name) || (product && product.title) || "prenda";
+    const sellerName = sellerProfile?.username || "Vendedor";
 
     await createNotification(buyer_id, "product_sold", "Producto marcado como vendido", `${sellerName} marcó "${productName}" como vendido.`, {
       product_id: Number(req.params.id),
@@ -1746,10 +1747,10 @@ app.post("/api/products/:id/confirm-receipt", requireUser, async (req, res) => {
     if (error) return res.status(500).json({ error: "Error al confirmar." });
 
     // Auto-generate notification for seller
-    const { data: product } = await supabaseAdmin.from("products").select("name, title, user_id").eq("id", req.params.id).single();
-    const buyerProfile = await supabaseAdmin.from("profiles").select("username").eq("id", req.user.id).single();
+    const { data: product } = await supabaseAdmin.from("products").select("name, title, user_id").eq("id", req.params.id).maybeSingle();
+    const { data: buyerProfile } = await supabaseAdmin.from("profiles").select("username").eq("id", req.user.id).maybeSingle();
     const productName = product?.name || product?.title || "prenda";
-    const buyerName = buyerProfile?.data?.username || "Comprador";
+    const buyerName = buyerProfile?.username || "Comprador";
 
     await createNotification(product.user_id, "receipt_confirmed", "Recepción confirmada", `${buyerName} confirmó recepción de "${productName}". Venta verificada.`, {
       product_id: Number(req.params.id),

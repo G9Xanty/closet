@@ -2015,3 +2015,140 @@ button {
   background: rgba(0, 255, 255, 0.2);
   border-color: rgba(0, 255, 255, 0.5);
 }
+
+/* ── Owner actions ── */
+
+.owner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.detail-btn.danger {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  padding: 10px 16px;
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.4);
+  color: #ff4444;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.detail-btn.danger:hover {
+  background: rgba(255, 68, 68, 0.25);
+  border-color: #ff4444;
+}
+
+.detail-btn.danger:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.small-btn.danger {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  padding: 8px 14px;
+  background: rgba(255, 68, 68, 0.15);
+  border: 1px solid rgba(255, 68, 68, 0.5);
+  color: #ff4444;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.small-btn.danger:hover {
+  background: rgba(255, 68, 68, 0.3);
+}
+
+.small-btn.danger:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── Seller rank ── */
+
+.detail-seller {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+}
+
+.profile-rank {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.profile-rank-badge {
+  font-family: "Press Start 2P", monospace;
+  font-size: 9px;
+  border: 1px solid;
+  border-radius: 4px;
+  padding: 4px 10px;
+  letter-spacing: 0.5px;
+}
+
+.profile-rank-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.profile-rank-next {
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.5px;
+}
+
+.seller-rank {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid;
+  border-radius: 4px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.seller-rank-name {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.rank-progress-bar {
+  width: 50px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.rank-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.seller-rank-next {
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
+}
+
+/* ── Modal hint ── */
+
+.modal-hint {
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}

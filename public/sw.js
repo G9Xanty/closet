@@ -1,4 +1,4 @@
-const CACHE = "closet-elander-v6";
+const CACHE = "closet-elander-v7";
 const SHELL_CACHE = "closet-shell-v2";
 const SHELL_ASSETS = [
   "/",
@@ -15,81 +15,115 @@ const SHELL_ASSETS = [
   "/assets/ChatGPT%20Image%2029%20jun%202026%2C%2010_48_09.png"
 ];
 
-self.addEventListener("message", event => {
+self.addEventListener("message", (event) => {
   if (event.data?.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
 });
 
-self.addEventListener("install", event => {
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(SHELL_CACHE).then(cache =>
-      Promise.allSettled(
-        SHELL_ASSETS.map(url =>
+    (async () => {
+      const cache = await caches.open(SHELL_CACHE);
+      await Promise.allSettled(
+        SHELL_ASSETS.map((url) =>
           cache.add(url).catch(() => {
             console.warn("[SW] Failed to cache:", url);
           })
         )
-      )
-    )
+      );
+      await self.skipWaiting();
+    })()
   );
-  self.skipWaiting();
 });
 
-self.addEventListener("activate", event => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(k => k !== CACHE && k !== SHELL_CACHE).map(k => caches.delete(k))
-      )
-    )
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter((key) => key !== CACHE && key !== SHELL_CACHE)
+          .map((key) => caches.delete(key))
+      );
+      await self.clients.claim();
+    })()
   );
-  self.clients.claim();
 });
 
-self.addEventListener("fetch", event => {
-  const { request } = event;
-  const url = new URL(request.url);
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok && request.method === "GET") {
+      try {
+        const cache = await caches.open(CACHE);
+        await cache.put(request, response.clone());
+      } catch (cacheError) {
+        console.warn("[SW] Cache put failed:", cacheError.message);
+      }
+    }
+    return response;
+  } catch (error) {
+    if (request.mode === "navigate") {
+      const cached = await caches.match("/offline.html");
+      if (cached) return cached;
+    }
+    return new Response(JSON.stringify({ error: "Offline" }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
+async function cacheFirst(request) {
+  try {
+    const cache = await caches.open(CACHE);
+    const cached = await cache.match(request);
+    if (cached) return cached;
+
+    const response = await fetch(request);
+    if (response.ok && request.method === "GET") {
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    if (request.mode === "navigate") {
+      const cached = await caches.match("/offline.html");
+      if (cached) return cached;
+    }
+    return new Response(JSON.stringify({ error: "Offline" }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
+self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+  const request = event.request;
 
   if (url.origin !== self.location.origin) return;
 
-  if (url.pathname.startsWith("/api/") || request.mode === "navigate") {
+  if (url.pathname.startsWith("/api/")) {
+    if (request.method === "GET") {
+      event.respondWith(networkFirst(request));
+    } else {
+      event.respondWith(
+        fetch(request).catch(() => {
+          return new Response(JSON.stringify({ error: "Offline" }), {
+            status: 503,
+            headers: { "Content-Type": "application/json" },
+          });
+        })
+      );
+    }
+    return;
+  }
+
+  if (request.mode === "navigate") {
     event.respondWith(networkFirst(request));
     return;
   }
 
   event.respondWith(cacheFirst(request));
 });
-
-async function cacheFirst(request) {
-  const cached = await caches.match(request);
-  if (cached) return cached;
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(CACHE);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch {
-    if (request.mode === "navigate") {
-      return caches.match("/offline.html");
-    }
-    return new Response("", { status: 503 });
-  }
-}
-
-async function networkFirst(request) {
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(CACHE);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch {
-    const cached = await caches.match(request);
-    if (cached) return cached;
-    return caches.match("/offline.html");
-  }
-}

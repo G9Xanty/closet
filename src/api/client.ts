@@ -8,15 +8,39 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
+let refreshing: Promise<string | null> | null = null;
+
+async function getAccessToken(): Promise<string | null> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (session?.access_token) return session.access_token;
+  return null;
+}
+
+async function tryRefresh(): Promise<string | null> {
+  if (!refreshing) {
+    refreshing = (async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.refreshSession();
+        return session?.access_token || null;
+      } catch {
+        return null;
+      } finally {
+        refreshing = null;
+      }
+    })();
+  }
+  return refreshing;
+}
+
 apiClient.interceptors.request.use(
   async (config) => {
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session?.access_token) {
-        config.headers.Authorization = `Bearer ${session.access_token}`;
-      }
+      const token = await getAccessToken();
+      if (token) config.headers.Authorization = `Bearer ${token}`;
     } catch {}
     return config;
   },
@@ -31,23 +55,14 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
     originalRequest._retry = true;
-    try {
-      const {
-        data: { session },
-        error: refreshError,
-      } = await supabase.auth.refreshSession();
-      if (refreshError || !session) {
-        await supabase.auth.signOut();
-        window.dispatchEvent(new CustomEvent("auth:logout"));
-        return Promise.reject(error);
-      }
-      originalRequest.headers.Authorization = `Bearer ${session.access_token}`;
+
+    const newToken = await tryRefresh();
+    if (newToken) {
+      originalRequest.headers.Authorization = `Bearer ${newToken}`;
       return apiClient(originalRequest);
-    } catch {
-      await supabase.auth.signOut();
-      window.dispatchEvent(new CustomEvent("auth:logout"));
-      return Promise.reject(error);
     }
+
+    return Promise.reject(error);
   }
 );
 

@@ -17,6 +17,25 @@ const ALL_AVATARS: AvatarInfo[] = [
   { id: "avatar-10", unlocked: false, required_sales: 100 },
 ];
 
+const RANK_THRESHOLDS = [
+  { sales: 0, name: "Nuevo", color: "#888" },
+  { sales: 1, name: "Vendedor", color: "#4caf50" },
+  { sales: 5, name: "Pro", color: "#2196f3" },
+  { sales: 10, name: "Top", color: "#ff9800" },
+  { sales: 25, name: "Élite", color: "#9c27b0" },
+  { sales: 50, name: "Leyenda", color: "#ffd700" },
+];
+
+function getRank(verifiedSales: number) {
+  let rank = RANK_THRESHOLDS[0];
+  for (const r of RANK_THRESHOLDS) {
+    if (verifiedSales >= r.sales) rank = r;
+  }
+  const nextIdx = RANK_THRESHOLDS.findIndex(r => r.sales > verifiedSales);
+  const next = nextIdx >= 0 ? RANK_THRESHOLDS[nextIdx] : null;
+  return { current: rank, next, progress: next ? (verifiedSales - rank.sales) / (next.sales - rank.sales) : 1 };
+}
+
 
 
 export default function ProfileScreen() {
@@ -167,8 +186,23 @@ export default function ProfileScreen() {
       )}
 
       <div className="profile-reputation">
+        <div className="profile-rank">
+          <div className="profile-rank-badge" style={{ borderColor: getRank(reputation.verified).current.color, color: getRank(reputation.verified).current.color }}>
+            {getRank(reputation.verified).current.name}
+          </div>
+          {getRank(reputation.verified).next && (
+            <div className="profile-rank-progress">
+              <div className="rank-progress-bar">
+                <div className="rank-progress-fill" style={{ width: `${Math.round(getRank(reputation.verified).progress * 100)}%`, background: getRank(reputation.verified).current.color }} />
+              </div>
+              <span className="profile-rank-next">{reputation.verified}/{getRank(reputation.verified).next!.sales} ventas verificadas</span>
+            </div>
+          )}
+          {!getRank(reputation.verified).next && (
+            <span className="profile-rank-next">{reputation.verified} ventas verificadas</span>
+          )}
+        </div>
         <div className="rep-item"><strong>{reputation.score}</strong> reputación</div>
-        <div className="rep-item"><strong>{reputation.verified}</strong> ventas verificadas</div>
         <div className="rep-item"><strong>{reputation.external}</strong> ventas externas</div>
       </div>
 
