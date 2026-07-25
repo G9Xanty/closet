@@ -1144,7 +1144,7 @@ app.get("/api/products/mine", requireUser, async (req, res) => {
     const { data, error } = await supabaseAdmin
       .from("products")
       .select("*")
-      .eq("seller_id", req.user.id)
+      .eq("user_id", req.user.id)
       .order("created_at", { ascending: false });
     if (error) return res.status(500).json({ error: error.message });
     res.json(data || []);
