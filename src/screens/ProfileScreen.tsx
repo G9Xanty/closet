@@ -50,6 +50,7 @@ export default function ProfileScreen() {
   const [location, setLocation] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [phonePrivate, setPhonePrivate] = useState(true);
+  const [whatsappEnabled, setWhatsappEnabled] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [reputation, setReputation] = useState({ score: 0, verified: 0, external: 0, reports: 0 });
   const [avatars, setAvatars] = useState<AvatarInfo[]>(ALL_AVATARS);
@@ -73,6 +74,7 @@ export default function ProfileScreen() {
           setLocation(p.location || "");
           setPhoneNumber(p.phone_number || "");
           setPhonePrivate(p.phone_private !== false);
+          setWhatsappEnabled(p.whatsapp_enabled === true);
           setReputation({
             score: p.reputation_score || 0,
             verified: p.sales_verified || 0,
@@ -120,7 +122,8 @@ export default function ProfileScreen() {
         bio: bio.trim(),
         location: location.trim(),
         phone_number: phoneNumber.trim(),
-        phone_private: phonePrivate
+        phone_private: phonePrivate,
+        whatsapp_enabled: whatsappEnabled
       };
       if (selectedAvatar !== user!.avatar) {
         body.avatar = selectedAvatar;
@@ -253,10 +256,14 @@ export default function ProfileScreen() {
             <div className="section-title">Contacto (WhatsApp para ventas)</div>
             <input className="field" type="tel" placeholder="WhatsApp (8 dígitos)" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} />
             <label className="profile-toggle">
+              <input type="checkbox" checked={whatsappEnabled} onChange={e => setWhatsappEnabled(e.target.checked)} />
+              <span>Habilitar WhatsApp para ventas</span>
+            </label>
+            <label className="profile-toggle">
               <input type="checkbox" checked={phonePrivate} onChange={e => setPhonePrivate(e.target.checked)} />
               <span>Número privado (no visible en perfil público)</span>
             </label>
-            <div className="profile-hint">Tu número se usará para que los compradores te contacten por WhatsApp.</div>
+            <div className="profile-hint">Activá WhatsApp para que los compradores te contacten directamente.</div>
           </div>
 
           <button className="small-btn" disabled={saving} onClick={handleSave}>
