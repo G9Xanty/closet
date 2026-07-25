@@ -58,6 +58,7 @@ export default function ProfileScreen() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [myProducts, setMyProducts] = useState<any[]>([]);
   const [myProductsLoading, setMyProductsLoading] = useState(true);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const loadedRef = useRef(false);
 
   useEffect(() => {
@@ -144,6 +145,22 @@ export default function ProfileScreen() {
   }
 
   const unlockedCount = avatars.filter(a => a.unlocked).length;
+
+  async function toggleProductStatus(productId: string, currentStatus: string) {
+    const newStatus = (currentStatus === "disponible" || currentStatus === "available") ? "reserved" : "disponible";
+    setTogglingId(productId);
+    try {
+      await api(`/api/products/${productId}/status`, {
+        method: "POST",
+        body: JSON.stringify({ status: newStatus })
+      });
+      setMyProducts(prev => prev.map(p => p.id === productId ? { ...p, status: newStatus } : p));
+    } catch (e: any) {
+      alert(e?.response?.data?.error || e.message || "Error");
+    } finally {
+      setTogglingId(null);
+    }
+  }
 
   return (
     <div className="view profile-view">
@@ -280,15 +297,18 @@ export default function ProfileScreen() {
               </div>
             ) : (
               <div className="my-products-grid">
-                {myProducts.map(p => (
-                  <div key={p.id} className="my-product-card" onClick={async () => {
-                    try {
-                      const data = await api(`/api/products/${p.id}`);
-                      setActiveProduct(data.product || data);
-                      goTo("detail");
-                    } catch { goTo("detail"); }
-                  }}>
-                    <div className="my-product-image">
+                {myProducts.map(p => {
+                  const isAvail = p.status === "disponible" || p.status === "available";
+                  const isReserved = p.status === "reserved" || p.status === "reservado";
+                  return (
+                  <div key={p.id} className="my-product-card">
+                    <div className="my-product-image" onClick={async () => {
+                      try {
+                        const data = await api(`/api/products/${p.id}`);
+                        setActiveProduct(data.product || data);
+                        goTo("detail");
+                      } catch { goTo("detail"); }
+                    }}>
                       {p.images && p.images[0] ? (
                         <img src={p.images[0]} alt={p.title} />
                       ) : (
@@ -298,14 +318,28 @@ export default function ProfileScreen() {
                     <div className="my-product-info">
                       <div className="my-product-title">{p.title}</div>
                       <div className="my-product-price">₡{p.price?.toLocaleString()}</div>
-                      <div className={`my-product-status status-${p.status}`}>
-                        {p.status === "disponible" || p.status === "available" ? "🟢 Disponible" :
-                         p.status === "reserved" || p.status === "reservado" ? "🟡 Reservado" :
-                         p.status === "sold" || p.status === "vendido" ? "🔴 Vendido" : p.status}
-                      </div>
+                      {isReserved && (
+                        <button
+                          className="my-product-toggle-btn"
+                          disabled={togglingId === p.id}
+                          onClick={(e) => { e.stopPropagation(); toggleProductStatus(p.status === "reservado" ? p.id : p.id, p.status); }}
+                        >
+                          {togglingId === p.id ? "..." : "Vender"}
+                        </button>
+                      )}
+                      {isAvail && (
+                        <button
+                          className="my-product-toggle-btn reserve"
+                          disabled={togglingId === p.id}
+                          onClick={(e) => { e.stopPropagation(); toggleProductStatus(p.id, p.status); }}
+                        >
+                          {togglingId === p.id ? "..." : "Reservar"}
+                        </button>
+                      )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
