@@ -431,6 +431,7 @@ function publicProduct(row) {
     seller_avatar: "",
     seller_reputation: row.seller_reputation || 0,
     seller_location: row.seller_location || "",
+    seller_phone: row.seller_phone || "",
     created_at: row.created_at
   };
 }
