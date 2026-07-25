@@ -215,9 +215,9 @@ export default function ProfileScreen() {
       </div>
 
       <div className="profile-tabs">
-        {["edit", "settings"].map(t => (
+        {["edit", "products", "settings"].map(t => (
           <button key={t} className={`profile-tab ${tab === t ? "active" : ""}`} onClick={() => setTab(t)}>
-            {t === "edit" ? "Editar perfil" : "Configuración"}
+            {t === "edit" ? "Editar" : t === "products" ? `Prendas (${myProducts.length})` : "Config"}
           </button>
         ))}
       </div>
@@ -260,9 +260,17 @@ export default function ProfileScreen() {
               {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
             </button>
           </div>
-
           <div className="profile-section">
-            <div className="section-title">Mis prendas ({myProducts.length})</div>
+            <div className="section-title">Cuenta</div>
+            <button className="small-btn secondary" onClick={handleLogout}>Cambiar cuenta</button>
+            <button className="small-btn secondary" onClick={handleLogout} style={{ borderColor: "rgba(255,68,68,0.3)", color: "#ff6666" }}>Cerrar sesión</button>
+          </div>
+        </div>
+      )}
+
+      {tab === "products" && (
+        <div className="profile-form">
+          <div className="profile-section">
             {myProductsLoading ? (
               <div className="my-products-loading">Cargando prendas...</div>
             ) : myProducts.length === 0 ? (
@@ -294,12 +302,6 @@ export default function ProfileScreen() {
                 ))}
               </div>
             )}
-          </div>
-
-          <div className="profile-section">
-            <div className="section-title">Cuenta</div>
-            <button className="small-btn secondary" onClick={handleLogout}>Cambiar cuenta</button>
-            <button className="small-btn secondary" onClick={handleLogout} style={{ borderColor: "rgba(255,68,68,0.3)", color: "#ff6666" }}>Cerrar sesión</button>
           </div>
         </div>
       )}
