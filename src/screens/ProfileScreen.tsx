@@ -39,7 +39,7 @@ function getRank(verifiedSales: number) {
 
 
 export default function ProfileScreen() {
-  const { user, signOut, goTo } = useAppContext();
+  const { user, signOut, goTo, setActiveProduct } = useAppContext();
   const [tab, setTab] = useState("edit");
   const [status, setStatus] = useState("");
   const [isError, setIsError] = useState(false);
@@ -281,7 +281,13 @@ export default function ProfileScreen() {
             ) : (
               <div className="my-products-grid">
                 {myProducts.map(p => (
-                  <div key={p.id} className="my-product-card" onClick={() => goTo("detail", { productId: p.id })}>
+                  <div key={p.id} className="my-product-card" onClick={async () => {
+                    try {
+                      const data = await api(`/api/products/${p.id}`);
+                      setActiveProduct(data.product || data);
+                      goTo("detail");
+                    } catch { goTo("detail"); }
+                  }}>
                     <div className="my-product-image">
                       {p.images && p.images[0] ? (
                         <img src={p.images[0]} alt={p.title} />
