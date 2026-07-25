@@ -155,7 +155,10 @@ export default function FeedScreen() {
     if (!user) { goTo("auth"); return; }
     const phone = (product as any).seller_phone || "";
     const clean = phone.replace(/[^0-9]/g, "");
-    if (!clean || clean.length < 8) return;
+    if (!clean || clean.length < 8) {
+      alert("El vendedor no tiene número de WhatsApp configurado.");
+      return;
+    }
     const msg = encodeURIComponent(`Hola! Vi "${product.name || product.title}" en Closet Elander y me interesa. ¿Sigue disponible?`);
     window.open(`https://wa.me/506${clean}?text=${msg}`, "_blank");
   }, [user, goTo]);

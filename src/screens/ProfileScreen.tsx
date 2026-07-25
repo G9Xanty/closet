@@ -124,8 +124,10 @@ export default function ProfileScreen() {
       });
       setStatus("Perfil guardado");
     } catch (err: any) {
-      setStatus(err.message || "Error al guardar");
+      const serverMsg = err?.response?.data?.error || err?.message || "Error al guardar";
+      setStatus(serverMsg);
       setIsError(true);
+      console.error("[PROFILE SAVE ERROR]", err?.response?.data || err);
     } finally {
       setSaving(false);
     }

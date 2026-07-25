@@ -1119,7 +1119,7 @@ app.get("/api/products", apiLimiter, async (req, res) => {
 
     const products = (rows || []).map(row => {
       const profile = row.profiles || {};
-      const visible = profile.phone_private === false && profile.whatsapp_enabled === true;
+      const visible = (profile.whatsapp_enabled === true && profile.phone_private === false) || row.status === "disponible" || row.status === "available";
       const { profiles: _unused, ...productData } = row;
       return publicProduct({
         ...productData,
@@ -1158,7 +1158,7 @@ app.get("/api/products/:id", apiLimiter, async (req, res) => {
       .eq("id", row.user_id)
       .single();
     if (profile) {
-      if (profile.whatsapp_enabled && profile.phone_private === false) {
+      if ((profile.whatsapp_enabled && profile.phone_private === false) || row.status === "disponible" || row.status === "available") {
         sellerPhone = profile.phone_number || sellerPhone;
       }
       sellerReputation = profile.reputation_score || 0;
@@ -1628,6 +1628,8 @@ app.get("/api/users/:id/stats", async (req, res) => {
     const totalSold = profile.total_products_sold || 0;
     const verificationRate = totalSold > 0 ? Math.round(((verifiedCount || 0) / totalSold) * 100) : 0;
 
+    const pendingCount = totalSold - (verifiedCount || 0);
+
     res.json({
       lastActive: profile.last_active_at,
       productsPublished: profile.total_products_published || 0,
@@ -1635,6 +1637,7 @@ app.get("/api/users/:id/stats", async (req, res) => {
       productsBought: profile.total_products_bought || 0,
       verificationLevel: profile.verification_level || "none",
       verificationRate,
+      pendingVerifications: pendingCount > 0 ? pendingCount : 0,
       memberSince: profile.created_at,
     });
   } catch (err) {

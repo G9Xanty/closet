@@ -108,6 +108,7 @@ export default function DetailScreen() {
   const rep = p.seller_reputation || 0;
   const repBadge = rep > 0 ? `★ ${rep}` : rep < 0 ? `☆ ${rep}` : "—";
 
+
   const rank = getRank(sellerSales);
 
   // Load verification status for sold products
@@ -321,11 +322,19 @@ export default function DetailScreen() {
               </button>
             )}
 
-            {isOwn && isAvailable && (
+            {isOwn && !isSold && (
               <div className="owner-actions">
                 <button className="detail-btn primary" onClick={() => setShowSellModal(true)}>
                   Marcar como vendido
                 </button>
+                <button className="detail-btn danger" onClick={() => setShowDeleteConfirm(true)}>
+                  Eliminar prenda
+                </button>
+              </div>
+            )}
+
+            {isOwn && isSold && (
+              <div className="owner-actions">
                 <button className="detail-btn danger" onClick={() => setShowDeleteConfirm(true)}>
                   Eliminar prenda
                 </button>
@@ -355,7 +364,10 @@ export default function DetailScreen() {
       {showSellModal && (
         <div className="modal-overlay" onClick={() => setShowSellModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">Marcar como vendido</div>
+            <div className="modal-header">
+              Marcar como vendido
+              <button className="modal-close-btn" onClick={() => setShowSellModal(false)}>✕</button>
+            </div>
 
             <div className="modal-field">
               <label className="modal-label">Buscar comprador</label>

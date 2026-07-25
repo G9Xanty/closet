@@ -75,6 +75,12 @@ export default function PublicProfileScreen() {
                   <div className="stat-value">{stats.productsSold}</div>
                   <div className="stat-label">Vendidas</div>
                 </div>
+                {stats.pendingVerifications > 0 && (
+                  <div className="stat-item">
+                    <div className="stat-value">{stats.pendingVerifications}</div>
+                    <div className="stat-label">En verificación</div>
+                  </div>
+                )}
                 <div className="stat-item">
                   <div className="stat-value">{stats.productsBought}</div>
                   <div className="stat-label">Compradas</div>
