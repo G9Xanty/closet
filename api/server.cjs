@@ -1141,7 +1141,7 @@ app.get("/api/products", apiLimiter, async (req, res) => {
 
 app.get("/api/products/mine", requireUser, async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("products")
       .select("*")
       .eq("seller_id", req.user.id)
