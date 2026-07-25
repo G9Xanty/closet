@@ -1168,7 +1168,7 @@ app.get("/api/products/:id", apiLimiter, async (req, res) => {
   let sellerReputation = 0;
   let buyerProfile = null;
   try {
-    const { data: profile } = await supabase
+    const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("phone_number, phone_private, whatsapp_enabled, reputation_score")
       .eq("id", row.user_id)
@@ -1179,7 +1179,7 @@ app.get("/api/products/:id", apiLimiter, async (req, res) => {
       }
       sellerReputation = profile.reputation_score || 0;
     }
-  } catch {}
+  } catch (e) { console.error("[PRODUCT DETAIL PROFILE]", e?.message); }
 
   // Get buyer info if product is sold
   if (row.buyer_id) {
@@ -1196,6 +1196,7 @@ app.get("/api/products/:id", apiLimiter, async (req, res) => {
   const product = publicProduct({ ...row, seller_phone: sellerPhone, seller_reputation: sellerReputation });
   if (buyerProfile) product.buyer = buyerProfile;
 
+  console.log("[PRODUCT DETAIL]", { id: row.id, sellerPhone, phone_number: row.seller_phone, status: row.status });
   res.json({ product });
 });
 
