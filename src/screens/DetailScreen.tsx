@@ -104,6 +104,7 @@ export default function DetailScreen() {
   const isSold = p.status === "sold" || p.status === "vendido";
   const sellerPhone = p.seller_phone || "";
   const hasWhatsApp = sellerPhone && sellerPhone.length >= 8;
+  console.log("[DETAIL DEBUG]", { sellerPhone, hasWhatsApp, status: p.status, user_id: p.user_id, isOwn });
   const metadata = (p as any).metadata || {};
   const shippingIncluded = metadata.shipping_included !== false;
   const shippingCostValue = metadata.shipping_cost || 0;
