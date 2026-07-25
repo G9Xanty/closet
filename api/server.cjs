@@ -1139,6 +1139,21 @@ app.get("/api/products", apiLimiter, async (req, res) => {
   }
 });
 
+app.get("/api/products/mine", requireUser, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("seller_id", req.user.id)
+      .order("created_at", { ascending: false });
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data || []);
+  } catch (err) {
+    console.error("[PRODUCTS MINE]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get("/api/products/:id", apiLimiter, async (req, res) => {
   const { data: row, error } = await supabase
     .from("products")

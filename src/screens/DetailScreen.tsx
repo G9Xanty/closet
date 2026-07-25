@@ -369,71 +369,73 @@ export default function DetailScreen() {
               <button className="modal-close-btn" onClick={() => setShowSellModal(false)}>✕</button>
             </div>
 
-            <div className="modal-field">
-              <label className="modal-label">Buscar comprador</label>
-              <input
-                className="field"
-                placeholder="Nombre de usuario..."
-                value={buyerSearch}
-                onChange={e => setBuyerSearch(e.target.value)}
-              />
-              {buyerResults.length > 0 && (
-                <div className="buyer-results">
-                  {buyerResults.map(u => (
-                    <div
-                      key={u.id}
-                      className={`buyer-result ${selectedBuyer?.id === u.id ? "selected" : ""}`}
-                      onClick={() => { setSelectedBuyer(u); setBuyerSearch(u.username); setBuyerResults([]); }}
-                    >
-                      @{u.username}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {selectedBuyer && (
-                <div className="buyer-selected">
-                  Seleccionado: @{selectedBuyer.username}
-                  <button className="small-btn secondary" onClick={() => setSelectedBuyer(null)}>×</button>
-                </div>
-              )}
-            </div>
-
-            <div className="modal-field">
-              <label className="modal-label">Envío</label>
-              <label className="modal-toggle">
-                <input type="checkbox" checked={includesShipping} onChange={e => setIncludesShipping(e.target.checked)} />
-                <span>Envío incluido en el precio</span>
-              </label>
-              {!includesShipping && (
+            <div className="modal-body">
+              <div className="modal-field">
+                <label className="modal-label">Buscar comprador</label>
                 <input
                   className="field"
-                  type="number"
-                  placeholder="Costo del envío (CRC)"
-                  value={shippingCost}
-                  onChange={e => setShippingCost(e.target.value)}
-                  min={0}
+                  placeholder="Nombre de usuario..."
+                  value={buyerSearch}
+                  onChange={e => setBuyerSearch(e.target.value)}
                 />
-              )}
-            </div>
+                {buyerResults.length > 0 && (
+                  <div className="buyer-results">
+                    {buyerResults.map(u => (
+                      <div
+                        key={u.id}
+                        className={`buyer-result ${selectedBuyer?.id === u.id ? "selected" : ""}`}
+                        onClick={() => { setSelectedBuyer(u); setBuyerSearch(u.username); setBuyerResults([]); }}
+                      >
+                        @{u.username}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {selectedBuyer && (
+                  <div className="buyer-selected">
+                    Seleccionado: @{selectedBuyer.username}
+                    <button className="small-btn secondary" onClick={() => setSelectedBuyer(null)}>×</button>
+                  </div>
+                )}
+              </div>
 
-            <div className="modal-field">
-              <label className="modal-label">Evidencia de venta (opcional pero recomendada)</label>
-              <div className="modal-hint">Sube una foto del producto empaquetado, recibo de envío o captura de conversación para verificar la venta y subir de rango.</div>
-              <input type="file" accept="image/*" onChange={handleEvidenceChange} />
-              {evidencePreview && (
-                <img src={evidencePreview} alt="Evidencia" className="evidence-preview" />
-              )}
-            </div>
+              <div className="modal-field">
+                <label className="modal-label">Envío</label>
+                <label className="modal-toggle">
+                  <input type="checkbox" checked={includesShipping} onChange={e => setIncludesShipping(e.target.checked)} />
+                  <span>Envío incluido en el precio</span>
+                </label>
+                {!includesShipping && (
+                  <input
+                    className="field"
+                    type="number"
+                    placeholder="Costo del envío (CRC)"
+                    value={shippingCost}
+                    onChange={e => setShippingCost(e.target.value)}
+                    min={0}
+                  />
+                )}
+              </div>
 
-            <div className="modal-actions">
-              <button className="small-btn secondary" onClick={() => setShowSellModal(false)}>Cancelar</button>
-              <button
-                className="small-btn"
-                disabled={!selectedBuyer || marking}
-                onClick={handleMarkSold}
-              >
-                {marking ? "Guardando..." : "Confirmar venta"}
-              </button>
+              <div className="modal-field">
+                <label className="modal-label">Evidencia de venta (opcional pero recomendada)</label>
+                <div className="modal-hint">Sube una foto del producto empaquetado, recibo de envío o captura de conversación para verificar la venta y subir de rango.</div>
+                <input type="file" accept="image/*" onChange={handleEvidenceChange} />
+                {evidencePreview && (
+                  <img src={evidencePreview} alt="Evidencia" className="evidence-preview" />
+                )}
+              </div>
+
+              <div className="modal-actions">
+                <button className="small-btn secondary" onClick={() => setShowSellModal(false)}>Cancelar</button>
+                <button
+                  className="small-btn"
+                  disabled={!selectedBuyer || marking}
+                  onClick={handleMarkSold}
+                >
+                  {marking ? "Guardando..." : "Confirmar venta"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

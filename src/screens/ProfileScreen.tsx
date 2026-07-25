@@ -56,6 +56,8 @@ export default function ProfileScreen() {
   const [selectedAvatar, setSelectedAvatar] = useState(user?.avatar || "avatar-1");
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [myProducts, setMyProducts] = useState<any[]>([]);
+  const [myProductsLoading, setMyProductsLoading] = useState(true);
   const loadedRef = useRef(false);
 
   useEffect(() => {
@@ -87,6 +89,10 @@ export default function ProfileScreen() {
       api("/api/notifications/unread-count")
         .then(data => setUnreadCount(data.count || 0))
         .catch(() => {});
+      api("/api/products/mine")
+        .then(data => setMyProducts(data || []))
+        .catch(() => {})
+        .finally(() => setMyProductsLoading(false));
     }
   }, [user]);
 
@@ -254,6 +260,42 @@ export default function ProfileScreen() {
               {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
             </button>
           </div>
+
+          <div className="profile-section">
+            <div className="section-title">Mis prendas ({myProducts.length})</div>
+            {myProductsLoading ? (
+              <div className="my-products-loading">Cargando prendas...</div>
+            ) : myProducts.length === 0 ? (
+              <div className="my-products-empty">
+                <p>No tenés prendas publicadas</p>
+                <button className="small-btn" onClick={() => goTo("upload")}>Publicar primera prenda</button>
+              </div>
+            ) : (
+              <div className="my-products-grid">
+                {myProducts.map(p => (
+                  <div key={p.id} className="my-product-card" onClick={() => goTo("detail", { productId: p.id })}>
+                    <div className="my-product-image">
+                      {p.images && p.images[0] ? (
+                        <img src={p.images[0]} alt={p.title} />
+                      ) : (
+                        <div className="my-product-no-img">📸</div>
+                      )}
+                    </div>
+                    <div className="my-product-info">
+                      <div className="my-product-title">{p.title}</div>
+                      <div className="my-product-price">₡{p.price?.toLocaleString()}</div>
+                      <div className={`my-product-status status-${p.status}`}>
+                        {p.status === "disponible" || p.status === "available" ? "🟢 Disponible" :
+                         p.status === "reserved" || p.status === "reservado" ? "🟡 Reservado" :
+                         p.status === "sold" || p.status === "vendido" ? "🔴 Vendido" : p.status}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="profile-section">
             <div className="section-title">Cuenta</div>
             <button className="small-btn secondary" onClick={handleLogout}>Cambiar cuenta</button>

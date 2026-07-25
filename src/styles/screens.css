@@ -1748,11 +1748,11 @@ button {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: safe center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
   padding: 16px;
   overflow-y: auto;
 }
@@ -1761,24 +1761,42 @@ button {
   background: #111;
   border: 1px solid rgba(0, 255, 255, 0.2);
   border-radius: 8px;
-  padding: 16px;
   width: 100%;
   max-width: 360px;
-  max-height: 85dvh;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 
 .modal-header {
+  flex-shrink: 0;
   font-family: "Press Start 2P", monospace;
   font-size: 11px;
   color: #00ffff;
-  margin-bottom: 12px;
+  padding: 16px 16px 12px 16px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.1);
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.3);
+  border-radius: 2px;
 }
 
 .modal-close-btn {
@@ -2171,4 +2189,110 @@ button {
   color: rgba(255, 255, 255, 0.4);
   line-height: 1.6;
   margin-bottom: 8px;
+}
+
+/* ── Mis Prendas ── */
+
+.my-products-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.my-products-loading {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  padding: 20px;
+}
+
+.my-products-empty {
+  text-align: center;
+  padding: 20px;
+}
+
+.my-products-empty p {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 12px;
+}
+
+.my-product-card {
+  background: rgba(0, 255, 255, 0.03);
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.my-product-card:active {
+  border-color: rgba(0, 255, 255, 0.4);
+}
+
+.my-product-image {
+  width: 100%;
+  height: 80px;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.my-product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.my-product-no-img {
+  font-size: 24px;
+  opacity: 0.3;
+}
+
+.my-product-info {
+  padding: 6px 8px;
+}
+
+.my-product-title {
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.my-product-price {
+  font-family: "Press Start 2P", monospace;
+  font-size: 9px;
+  color: #00ffff;
+  display: block;
+  margin-top: 2px;
+}
+
+.my-product-status {
+  font-family: "Press Start 2P", monospace;
+  font-size: 6px;
+  display: block;
+  margin-top: 4px;
+}
+
+.my-product-status.status-disponible,
+.my-product-status.status-available {
+  color: #4caf50;
+}
+
+.my-product-status.status-reserved,
+.my-product-status.status-reservado {
+  color: #ff9800;
+}
+
+.my-product-status.status-sold,
+.my-product-status.status-vendido {
+  color: #ff4444;
 }
