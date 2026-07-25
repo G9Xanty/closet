@@ -1750,10 +1750,11 @@ button {
   inset: 0;
   background: rgba(0, 0, 0, 0.8);
   display: flex;
-  align-items: center;
+  align-items: safe center;
   justify-content: center;
   z-index: 1000;
   padding: 16px;
+  overflow-y: auto;
 }
 
 .modal-content {
@@ -1763,8 +1764,10 @@ button {
   padding: 16px;
   width: 100%;
   max-width: 360px;
-  max-height: 80vh;
+  max-height: 85dvh;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-header {
