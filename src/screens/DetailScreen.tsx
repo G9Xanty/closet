@@ -51,10 +51,13 @@ function getRank(verifiedSales: number) {
   return { current: rank, next, progress: next ? (verifiedSales - rank.sales) / (next.sales - rank.sales) : 1 };
 }
 
-function openWhatsApp(phone: string, productName: string) {
+function openWhatsApp(phone: string, productName: string, imageUrl?: string) {
   const clean = phone.replace(/[^0-9]/g, "");
-  const msg = encodeURIComponent(`Hola! Vi "${productName}" en Closet Elander y me interesa. ¿Sigue disponible?`);
-  window.open(`https://wa.me/506${clean}?text=${msg}`, "_blank");
+  let msg = `Hola! Vi "${productName}" en Closet Elander y me interesa. ¿Sigue disponible?`;
+  if (imageUrl) {
+    msg += `\n\nReferencia: ${imageUrl}`;
+  }
+  window.open(`https://wa.me/506${clean}?text=${encodeURIComponent(msg)}`, "_blank");
 }
 
 interface SearchUser {
@@ -312,8 +315,8 @@ export default function DetailScreen() {
 
           <div className="detail-actions">
             {!isOwn && isAvailable && hasWhatsApp && (
-              <button className="detail-btn primary" onClick={() => openWhatsApp(sellerPhone, product.name || product.title || "prenda")}>
-                Contactar por WhatsApp
+              <button className="detail-btn primary" onClick={() => openWhatsApp(sellerPhone, product.name || product.title || "prenda", currentImg)}>
+                Me interesa
               </button>
             )}
             {!isOwn && isAvailable && !hasWhatsApp && (

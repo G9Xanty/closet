@@ -159,8 +159,13 @@ export default function FeedScreen() {
       alert("El vendedor no tiene número de WhatsApp configurado.");
       return;
     }
-    const msg = encodeURIComponent(`Hola! Vi "${product.name || product.title}" en Closet Elander y me interesa. ¿Sigue disponible?`);
-    window.open(`https://wa.me/506${clean}?text=${msg}`, "_blank");
+    const images = product.images?.filter(Boolean) || [product.image_url].filter(Boolean);
+    const firstImage = images[0] || "";
+    let msg = `Hola! Vi "${product.name || product.title}" en Closet Elander y me interesa. ¿Sigue disponible?`;
+    if (firstImage) {
+      msg += `\n\nReferencia: ${firstImage}`;
+    }
+    window.open(`https://wa.me/506${clean}?text=${encodeURIComponent(msg)}`, "_blank");
   }, [user, goTo]);
 
   const handleRetry = useCallback(() => {
