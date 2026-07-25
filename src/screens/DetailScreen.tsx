@@ -327,6 +327,19 @@ export default function DetailScreen() {
 
             {isOwn && !isSold && (
               <div className="owner-actions">
+                {!isAvailable && (
+                  <button className="detail-btn primary" disabled={marking} onClick={async () => {
+                    setMarking(true);
+                    try {
+                      await api(`/api/products/${p.id}/status`, { method: "POST", body: JSON.stringify({ status: "disponible" }) });
+                      setStatusMsg("Puesto a la venta");
+                      window.location.reload();
+                    } catch (e: any) { setStatusMsg(e.message || "Error"); }
+                    finally { setMarking(false); }
+                  }}>
+                    Poner a la venta
+                  </button>
+                )}
                 <button className="detail-btn primary" onClick={() => setShowSellModal(true)}>
                   Marcar como vendido
                 </button>

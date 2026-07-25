@@ -1660,6 +1660,27 @@ app.get("/api/users/:id/stats", async (req, res) => {
   }
 });
 
+// POST /api/products/:id/status - Change product status (disponible/reserved/sold)
+app.post("/api/products/:id/status", requireUser, async (req, res) => {
+  try {
+    const { status } = req.body || {};
+    const VALID = ["disponible", "available", "reserved", "reservado", "sold", "vendido", "hidden"];
+    if (!VALID.includes(status)) return res.status(400).json({ error: "Estado invalido." });
+
+    const { data: product } = await supabaseAdmin.from("products").select("user_id, status").eq("id", req.params.id).single();
+    if (!product) return res.status(404).json({ error: "Producto no encontrado." });
+    if (product.user_id !== req.user.id) return res.status(403).json({ error: "Solo el dueño puede cambiar el estado." });
+
+    const { error } = await supabaseAdmin.from("products").update({ status }).eq("id", req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
+
+    res.json({ ok: true, status });
+  } catch (err) {
+    console.error("[PRODUCT STATUS]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/products/:id/mark-sold - Mark product as sold with shipping info + evidence
 app.post("/api/products/:id/mark-sold", requireUser, async (req, res) => {
   try {
