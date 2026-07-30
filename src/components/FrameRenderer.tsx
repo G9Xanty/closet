@@ -1,51 +1,64 @@
-import { useEffect, useState, type ReactNode } from "react";
-import "../styles/frame.css";
+import React, { useEffect } from 'react';
+import '../styles/frame.css';
 
-const BREAKPOINT = 1024;
-
-function useViewport() {
-  const [isDesktop, setDesktop] = useState(() => window.innerWidth >= BREAKPOINT);
-
-  useEffect(() => {
-    const onResize = () => setDesktop(window.innerWidth >= BREAKPOINT);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-
-  return isDesktop;
+interface FrameRendererProps {
+  children: React.ReactNode;
 }
 
-function DesktopFrame({ children }: { children: ReactNode }) {
+const DesktopFrame: React.FC<FrameRendererProps> = ({ children }) => {
   return (
-    <div className="arcade-wrapper">
-      <div className="arcade-machine">
-        <div className="desktop-app">
-          <div className="viewport-safe">
+    <div className="desktop-frame">
+      <div className="arcade-wrapper">
+        <div className="arcade-machine">
+          <div className="desktop-app">
+            <div className="viewport-root">
+              {children}
+            </div>
+          </div>
+          <img
+            src="/assets/arcade_computadora.png"
+            alt=""
+            className="desktop-frame-image"
+            draggable={false}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MobileFrame: React.FC<FrameRendererProps> = ({ children }) => {
+  return (
+    <div className="mobile-frame">
+      <div className="mobile-machine">
+        <div className="mobile-app">
+          <div className="mobile-app-inner">
             {children}
           </div>
         </div>
-        <img className="desktop-frame" src="/assets/arcade_computadora.png" alt="" draggable={false} />
+        <img
+          src="/assets/marco_celular.png"
+          alt=""
+          className="mobile-frame-image"
+          draggable={false}
+        />
       </div>
     </div>
   );
-}
+};
 
-function MobileFrame({ children }: { children: ReactNode }) {
-  return (
-    <div className="arcade-machine mobile-machine">
-      <img className="mobile-bg" src="/assets/vantablack cell.png" alt="" draggable={false} />
-      <div className="mobile-app">
-        <div className="viewport-safe">
-          {children}
-        </div>
-      </div>
-      <img className="mobile-frame" src="/assets/ChatGPT Image 29 jun 2026, 10_48_09.png" alt="" draggable={false} />
-    </div>
-  );
-}
+const FrameRenderer: React.FC<FrameRendererProps> = ({ children }) => {
+  useEffect(() => {
+    console.log('[FRAME]', { isMobile: window.innerWidth < 1024 });
+  }, []);
 
-export default function FrameRenderer({ children }: { children: ReactNode }) {
-  const isDesktop = useViewport();
-  console.log('[FRAME]', { isDesktop, frameType: isDesktop ? 'desktop' : 'mobile' });
-  return isDesktop ? <DesktopFrame>{children}</DesktopFrame> : <MobileFrame>{children}</MobileFrame>;
-}
+  const isMobile = window.innerWidth < 1024;
+
+  if (isMobile) {
+    return <MobileFrame>{children}</MobileFrame>;
+  }
+
+  return <DesktopFrame>{children}</DesktopFrame>;
+};
+
+export default FrameRenderer;

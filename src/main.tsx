@@ -6,22 +6,10 @@ import { isSupabaseReady } from "./lib/supabase";
 import "./styles/global.css";
 
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").then(reg => {
-      reg.addEventListener("updatefound", () => {
-        const newWorker = reg.installing;
-        if (newWorker) {
-          newWorker.addEventListener("statechange", () => {
-            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              newWorker.postMessage({ type: "SKIP_WAITING" });
-            }
-          });
-        }
-      });
-    }).catch(err => {
-      console.warn("[PWA] SW registration failed:", err);
-    });
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(reg => reg.unregister());
   });
+  caches.keys().then(keys => keys.forEach(key => caches.delete(key)));
 }
 
 const rootEl = document.getElementById("root");
